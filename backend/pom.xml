@@ -172,12 +172,6 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
-		<!-- openstack swift -->
-		<dependency>
-			<groupId>org.javaswift</groupId>
-			<artifactId>joss</artifactId>
-			<version>0.10.2</version>
-		</dependency>		
 	</dependencies>
 
 	<build>
