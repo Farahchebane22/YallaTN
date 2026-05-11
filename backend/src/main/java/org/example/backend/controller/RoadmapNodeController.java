@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ludification/roadmap")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class RoadmapNodeController {
 
     private final RoadmapNodeService roadmapNodeService;

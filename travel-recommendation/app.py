@@ -10,8 +10,8 @@ import pandas as pd
 import sklearn
 from flask import Flask, jsonify, request
 
-ROOT = Path(__file__).resolve().parents[1]
-MODEL_PATH = Path(os.environ.get("TRAVEL_MATCH_MODEL", str(ROOT / "travel-recommendation" / "model_bundle.joblib")))
+ROOT = Path(__file__).resolve().parent
+MODEL_PATH = Path(os.environ.get("TRAVEL_MATCH_MODEL", str(ROOT / "model_bundle.joblib")))
 
 app = Flask(__name__)
 _bundle: dict[str, Any] | None = None
@@ -315,4 +315,4 @@ def recommend():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "5050"))
     load_model()
-    app.run(host="127.0.0.1", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")
+    app.run(host="0.0.0.0", port=port, debug=os.environ.get("FLASK_DEBUG") == "1")

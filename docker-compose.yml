@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: cloudaura-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: Yallatn
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudaura-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cloudaura-backend
+    restart: always
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/Yallatn?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-rootpassword}
+      - JWT_SECRET=${JWT_SECRET:-change-me-production-secret-key-1234567890}
+      - APP_FRONTEND_BASE_URL=http://localhost
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cloudaura-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cloudaura-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - cloudaura-net
+
+  aiii:
+    build:
+      context: ./aiii
+      dockerfile: Dockerfile
+    container_name: cloudaura-aiii
+    restart: always
+    ports:
+      - "7860:7860"
+    networks:
+      - cloudaura-net
+
+networks:
+  cloudaura-net:
+    driver: bridge
+
+volumes:
+  db_data:
+  backend_uploads:

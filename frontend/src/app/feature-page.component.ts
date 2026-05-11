@@ -544,7 +544,8 @@ export class FeaturePageComponent implements OnInit {
   }
 
   showCatalogImage(p: CatalogProduct): boolean {
-    return !!(p.imageUrl && !this.catalogImageFailed().has(p.productId));
+    const hasImage = !!(p.imageUrl || (p.images && p.images.length > 0));
+    return hasImage && !this.catalogImageFailed().has(p.productId);
   }
 
   formatPrice(p: number | null | undefined): string {

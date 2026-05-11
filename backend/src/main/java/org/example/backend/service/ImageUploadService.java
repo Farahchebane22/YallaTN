@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,12 +18,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Base64;
-import java.util.UUID;
 
 @Service
 public class ImageUploadService {
@@ -36,11 +32,11 @@ public class ImageUploadService {
     @Value("${app.imgbb.api-key:${imgbb.api.key:}}")
     private String apiKey;
 
+    @Autowired
+    private SwiftStorageService swiftStorageService;
+
     @Value("${app.upload.max-image-bytes:5242880}")
     private long maxImageBytes;
-
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
 
     public ImageUploadService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -122,23 +118,9 @@ public class ImageUploadService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "api.error.image.type_invalid");
         }
         try {
-            String original = file.getOriginalFilename() == null ? "" : file.getOriginalFilename();
-            String ext = "";
-            int dot = original.lastIndexOf('.');
-            if (dot >= 0) {
-                ext = original.substring(dot);
-            }
-            if (ext.isEmpty()) {
-                ext = contentType.contains("png") ? ".png" : contentType.contains("gif") ? ".gif" : ".jpg";
-            }
-            String fileName = UUID.randomUUID() + ext;
-            Path targetDir = Paths.get(uploadDir, "profile-images").toAbsolutePath().normalize();
-            Files.createDirectories(targetDir);
-            Path target = targetDir.resolve(fileName);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return "/uploads/profile-images/" + fileName;
+            return swiftStorageService.uploadFile(file);
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "api.error.image.save_failed");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "api.error.image.save_failed_swift");
         }
     }
 }

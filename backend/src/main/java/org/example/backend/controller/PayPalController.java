@@ -45,19 +45,18 @@ public class PayPalController {
     @Value("${paypal.client.secret:}")
     private String paypalClientSecret;
 
-    @Value("${paypal.return.url:http://localhost:4200/transport/payment/return}")
+    @Value("${paypal.return.url:https://ragweed-catfish-judicial.ngrok-free.dev/transport/payment/return}")
     private String paypalReturnUrl;
 
-    @Value("${paypal.cancel.url:http://localhost:4200/transport/payment/cancel}")
+    @Value("${paypal.cancel.url:https://ragweed-catfish-judicial.ngrok-free.dev/transport/payment/cancel}")
     private String paypalCancelUrl;
 
     @PostConstruct
     void logPayPalConfig() {
         boolean ok = isPayPalConfigured();
-        String prefix =
-                paypalClientId == null || paypalClientId.length() < 8
-                        ? "(vide)"
-                        : paypalClientId.substring(0, 8) + "…";
+        String prefix = paypalClientId == null || paypalClientId.length() < 8
+                ? "(vide)"
+                : paypalClientId.substring(0, 8) + "…";
         log.info("PayPal configuration: enabled={} clientIdPrefix={}", ok, prefix);
     }
 
@@ -92,7 +91,8 @@ public class PayPalController {
         Map<String, Object> orderResponse = paypalService.createOrder(amountUsd, returnUrl, cancelUrl);
         String approvalUrl = PayPalService.extractApprovalUrl(orderResponse);
         if (approvalUrl == null || approvalUrl.isBlank()) {
-            log.error("PayPal order missing approve link for reservationId={}", reservation.getTransportReservationId());
+            log.error("PayPal order missing approve link for reservationId={}",
+                    reservation.getTransportReservationId());
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "api.error.paypal.no_approval_url");
         }
 
@@ -127,8 +127,8 @@ public class PayPalController {
         log.info("PayPal capture request: userId={} reservationId={} tokenLen={}", uid, reservationId, token.length());
 
         try {
-            TransportReservationResponse dto =
-                    transportReservationService.confirmTransportPayPalCapture(token.trim(), reservationId, uid);
+            TransportReservationResponse dto = transportReservationService.confirmTransportPayPalCapture(token.trim(),
+                    reservationId, uid);
             Map<String, Object> data = new HashMap<>();
             data.put("status", "CONFIRMED");
             data.put("reservationId", reservationId);
@@ -153,6 +153,10 @@ public class PayPalController {
         if (u == null || u.isBlank()) {
             return "http://localhost:4200";
         }
-        return u.trim();
+        String trimmed = u.trim();
+        if (trimmed.contains(",")) {
+            return trimmed.split(",")[0].trim();
+        }
+        return trimmed;
     }
 }

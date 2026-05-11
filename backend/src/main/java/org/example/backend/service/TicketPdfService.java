@@ -18,7 +18,8 @@ import java.util.Base64;
 import java.util.Locale;
 
 /**
- * Transport ticket PDF from HTML/CSS template ({@code /ticket/transport-ticket.html}) via OpenHTMLToPDF.
+ * Transport ticket PDF from HTML/CSS template
+ * ({@code /ticket/transport-ticket.html}) via OpenHTMLToPDF.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class TicketPdfService {
     @Value("${app.ticket.support-email:support@yallatn.com}")
     private String supportEmail;
 
-    @Value("${app.frontend.base-url:http://localhost:4200}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${app.ticket.support-phone:}")
@@ -72,7 +73,8 @@ public class TicketPdfService {
         }
     }
 
-    private String buildHtml(TransportReservationResponse r, String qrDataUri, String barcodeDataUri, String barcodeText)
+    private String buildHtml(TransportReservationResponse r, String qrDataUri, String barcodeDataUri,
+            String barcodeText)
             throws IOException {
         String template;
         try (InputStream in = TicketPdfService.class.getResourceAsStream("/ticket/transport-ticket.html")) {
@@ -99,7 +101,8 @@ public class TicketPdfService {
         String styledRef = ref.startsWith("#") ? ref : "#" + ref;
 
         String[] status = mapStatusBadge(r.getStatus(), r.getStatusLabel());
-        String statusBadgeHtml = "<span class=\"bp-status " + status[0] + "\">" + esc(status[1]) + esc(status[2]) + "</span>";
+        String statusBadgeHtml = "<span class=\"bp-status " + status[0] + "\">" + esc(status[1]) + esc(status[2])
+                + "</span>";
 
         String payStatusDisp = nvl(r.getPaymentStatusLabel());
         String payMethodDisp = nvl(r.getPaymentMethodLabel());
@@ -181,18 +184,18 @@ public class TicketPdfService {
         String f = nvl(r.getPassengerFirstName()).trim();
         String l = nvl(r.getPassengerLastName()).trim();
         if (!f.isEmpty() || !l.isEmpty()) {
-            return new String[]{
+            return new String[] {
                     f.isEmpty() ? "—" : f.toUpperCase(Locale.ROOT),
                     l.isEmpty() ? "—" : l.toUpperCase(Locale.ROOT)
             };
         }
         String full = nvl(r.getPassengerFullName()).trim();
         if (full.isEmpty()) {
-            return new String[]{"—", "—"};
+            return new String[] { "—", "—" };
         }
         String[] parts = full.split("\\s+");
         if (parts.length == 1) {
-            return new String[]{"—", parts[0].toUpperCase(Locale.ROOT)};
+            return new String[] { "—", parts[0].toUpperCase(Locale.ROOT) };
         }
         String last = parts[parts.length - 1];
         StringBuilder first = new StringBuilder();
@@ -202,7 +205,7 @@ public class TicketPdfService {
             }
             first.append(parts[i]);
         }
-        return new String[]{first.toString().toUpperCase(Locale.ROOT), last.toUpperCase(Locale.ROOT)};
+        return new String[] { first.toString().toUpperCase(Locale.ROOT), last.toUpperCase(Locale.ROOT) };
     }
 
     private String buildLogoHtml() {
@@ -222,35 +225,38 @@ public class TicketPdfService {
         }
     }
 
-    /** [cssClass, iconPrefix, labelUppercase] — {@code statusLabel} from API when present. */
+    /**
+     * [cssClass, iconPrefix, labelUppercase] — {@code statusLabel} from API when
+     * present.
+     */
     private static String[] mapStatusBadge(String status, String statusLabel) {
         if (statusLabel != null && !statusLabel.isBlank()) {
             String u = status != null ? status.toUpperCase(Locale.ROOT) : "";
             if (u.contains("CONFIRM")) {
-                return new String[]{"badge--ok", "\u2713 ", statusLabel.toUpperCase(Locale.ROOT)};
+                return new String[] { "badge--ok", "\u2713 ", statusLabel.toUpperCase(Locale.ROOT) };
             }
             if (u.contains("CANCEL")) {
-                return new String[]{"badge--cancel", "", statusLabel.toUpperCase(Locale.ROOT)};
+                return new String[] { "badge--cancel", "", statusLabel.toUpperCase(Locale.ROOT) };
             }
             if (u.contains("PEND")) {
-                return new String[]{"badge--pending", "", statusLabel.toUpperCase(Locale.ROOT)};
+                return new String[] { "badge--pending", "", statusLabel.toUpperCase(Locale.ROOT) };
             }
-            return new String[]{"badge--neutral", "", statusLabel.toUpperCase(Locale.ROOT)};
+            return new String[] { "badge--neutral", "", statusLabel.toUpperCase(Locale.ROOT) };
         }
         if (status == null) {
-            return new String[]{"badge--neutral", "", "INCONNU"};
+            return new String[] { "badge--neutral", "", "INCONNU" };
         }
         String u = status.toUpperCase(Locale.ROOT);
         if (u.contains("CONFIRM")) {
-            return new String[]{"badge--ok", "\u2713 ", "CONFIRMÉ"};
+            return new String[] { "badge--ok", "\u2713 ", "CONFIRMÉ" };
         }
         if (u.contains("CANCEL")) {
-            return new String[]{"badge--cancel", "", "ANNULÉ"};
+            return new String[] { "badge--cancel", "", "ANNULÉ" };
         }
         if (u.contains("PEND")) {
-            return new String[]{"badge--pending", "", "EN ATTENTE"};
+            return new String[] { "badge--pending", "", "EN ATTENTE" };
         }
-        return new String[]{"badge--neutral", "", status.toUpperCase(Locale.ROOT)};
+        return new String[] { "badge--neutral", "", status.toUpperCase(Locale.ROOT) };
     }
 
     private static String cityCode(String name) {

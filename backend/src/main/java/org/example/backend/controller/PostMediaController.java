@@ -1,14 +1,10 @@
 package org.example.backend.controller;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 
 import org.example.backend.model.PostMedia;
 import org.example.backend.model.MediaType;
@@ -25,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.example.backend.model.Post;
 import org.example.backend.service.GeminiCommunityImageTaggingService;
-
+import org.example.backend.service.SwiftStorageService;
 import java.io.IOException;
 
 @RestController
@@ -40,6 +36,9 @@ public class PostMediaController {
 
     @Autowired
     GeminiCommunityImageTaggingService geminiCommunityImageTaggingService;
+
+    @Autowired
+    SwiftStorageService swiftStorageService;
 
     @GetMapping("/allMedias")
     public List<PostMedia> getAllMedia() {
@@ -110,23 +109,7 @@ public class PostMediaController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "api.error.post_media_owner_only");
         }
 
-        // Store uploads under: <project>/uploads/post-media/
-        Path uploadRoot = Paths.get(System.getProperty("user.dir"), "uploads", "post-media");
-        Files.createDirectories(uploadRoot);
-
-        String original = file.getOriginalFilename();
-        String safeOriginal = (original == null ? "media" : original)
-                .replaceAll("[^a-zA-Z0-9._-]", "_");
-        // Keep filenames reasonably short.
-        if (safeOriginal.length() > 80) {
-            safeOriginal = safeOriginal.substring(safeOriginal.length() - 80);
-        }
-
-        String storedName = UUID.randomUUID() + "_" + safeOriginal;
-        Path targetPath = uploadRoot.resolve(storedName);
-        file.transferTo(targetPath);
-
-        String fileUrl = "/uploads/post-media/" + storedName;
+        String fileUrl = swiftStorageService.uploadFile(file);
 
         PostMedia media = new PostMedia();
         media.setPost(post);

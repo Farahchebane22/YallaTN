@@ -23,9 +23,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final UserSessionService userSessionService;
 
-    public JwtAuthenticationFilter(JwtService jwtService,
-                                   CustomUserDetailsService userDetailsService,
-                                   UserSessionService userSessionService) {
+    public JwtAuthenticationFilter(
+            JwtService jwtService,
+            CustomUserDetailsService userDetailsService,
+            UserSessionService userSessionService) {
+
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
         this.userSessionService = userSessionService;
@@ -33,59 +35,106 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+
         String path = request.getServletPath();
-        return path.equals("/api/auth/signin")
-                || path.equals("/api/auth/signup")
-                || path.equals("/api/auth/verify-email")
-                || path.equals("/api/auth/resend-verification")
-                || path.equals("/api/auth/forgot-password")
-                || path.equals("/api/auth/reset-password")
-                || path.equals("/api/auth/social/providers")
-                || path.equals("/api/auth/captcha-config")
-                || path.startsWith("/auth/")
-                || path.startsWith("/public/")
-                || path.startsWith("/ws");
+
+        return
+
+        // ACTUATOR
+        path.startsWith("/api/actuator")
+
+                // AUTH
+                || path.startsWith("/api/auth")
+                || path.startsWith("/auth")
+                || path.startsWith("/oauth2")
+                || path.startsWith("/login")
+
+                // PUBLIC APIs
+                || path.startsWith("/api/public")
+                || path.startsWith("/public")
+
+                // WEBSOCKET
+                || path.startsWith("/ws")
+                || path.startsWith("/api/ws")
+
+                // STATIC
+                || path.startsWith("/uploads")
+                || path.startsWith("/media");
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
+            throws ServletException, IOException {
+
         String authHeader = request.getHeader("Authorization");
+
+        // NO TOKEN
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
+
         String username;
+
         try {
             username = jwtService.extractUsername(token);
+
         } catch (Exception ex) {
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        if (username != null) {
+        // ALREADY AUTHENTICATED
+        if (username != null
+                && SecurityContextHolder.getContext().getAuthentication() == null) {
+
             try {
+
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+
                 if (jwtService.isTokenValid(token, userDetails)) {
+
                     String sessionId = jwtService.extractSessionId(token);
+
+                    // SESSION CHECK
                     if (sessionId != null && !sessionId.isBlank()) {
-                        if (!userSessionService.isSessionActive(sessionId, userDetails.getUsername())) {
+
+                        boolean active = userSessionService.isSessionActive(
+                                sessionId,
+                                userDetails.getUsername());
+
+                        if (!active) {
+
                             SecurityContextHolder.clearContext();
+
                             filterChain.doFilter(request, response);
                             return;
                         }
+
                         userSessionService.touchSession(sessionId);
                     }
 
-                    UsernamePasswordAuthenticationToken authenticationToken =
-                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                    authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities());
+
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request));
+
+                    SecurityContextHolder.getContext()
+                            .setAuthentication(authentication);
                 }
-            } catch (Exception ignored) {
+
+            } catch (Exception ex) {
+
                 SecurityContextHolder.clearContext();
             }
         }

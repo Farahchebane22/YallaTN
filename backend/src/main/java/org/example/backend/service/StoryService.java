@@ -5,6 +5,7 @@ import org.example.backend.dto.StoryResponse;
 import org.example.backend.model.*;
 import org.example.backend.repository.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,10 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -29,8 +26,8 @@ public class StoryService implements IStoryService {
     private final StoryLikeRepository storyLikeRepository;
     private final UserRepository userRepository;
 
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
+    @Autowired
+    private SwiftStorageService swiftStorageService;
 
     public StoryService(
             StoryRepository storyRepository,
@@ -282,18 +279,10 @@ public class StoryService implements IStoryService {
     }
 
     private String storeStoryFile(MultipartFile file) {
-        String originalName = file.getOriginalFilename() == null ? "story" : file.getOriginalFilename();
-        String safeOriginal = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
-        String storedName = UUID.randomUUID() + "_" + safeOriginal;
-
-        Path uploadRoot = Paths.get(uploadDir, "story-media").toAbsolutePath().normalize();
         try {
-            Files.createDirectories(uploadRoot);
-            Path target = uploadRoot.resolve(storedName);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return "/uploads/story-media/" + storedName;
+            return swiftStorageService.uploadFile(file);
         } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store story media");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store story media in Swift");
         }
     }
 

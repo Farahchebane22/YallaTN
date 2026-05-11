@@ -41,7 +41,7 @@ public class EmailService {
             @Value("${app.mail.from.address:${spring.mail.username:no-reply@localhost}}") String userFromEmail,
             @Value("${app.shop.mail.from.name:YallaTN}") String shopFromName,
             @Value("${app.shop.mail.from.address:${app.shop.mail.username:no-reply@localhost}}") String shopFromEmail,
-            @Value("${app.frontend.base-url:http://localhost:4200}") String frontendBaseUrl,
+            @Value("${app.frontend.base-url:https://ragweed-catfish-judicial.ngrok-free.dev}") String frontendBaseUrl,
             @Value("${app.mail.welcome-image-path:}") String welcomeImagePath,
             QrCodeService qrCodeService) {
         this.userMailSender = userMailSender;
@@ -65,7 +65,7 @@ public class EmailService {
 
     private static String normalizeBaseUrl(String url) {
         if (url == null || url.isBlank()) {
-            return "http://localhost:4200";
+            return "https://ragweed-catfish-judicial.ngrok-free.dev";
         }
         String t = url.trim();
         if (t.endsWith("/")) {
@@ -74,7 +74,7 @@ public class EmailService {
         return t;
     }
 
-        public void sendVerificationEmail(
+    public void sendVerificationEmail(
             String toEmail,
             String firstName,
             String lastName,
@@ -91,31 +91,31 @@ public class EmailService {
         String nationalityValue = fallbackValue(nationality, "Non renseignee");
         String subject = "YallaTN+ — Confirmation d'inscription";
         String plainText = "Bienvenue " + displayName + ",\n\n"
-            + "Votre compte YallaTN+ a ete cree avec succes.\n"
-            + "Confirmez votre adresse email avec ce lien :\n"
-            + verificationLink + "\n\n"
-            + "Ce lien est valable 24 heures.\n"
-            + "Nom complet : " + fullName + "\n"
-            + "Nom d'utilisateur : " + usernameValue + "\n"
-            + "Email : " + emailValue + "\n"
-            + "Telephone : " + phoneValue + "\n"
-            + "Nationalite : " + nationalityValue + "\n\n"
-            + "L'equipe YallaTN+";
+                + "Votre compte YallaTN+ a ete cree avec succes.\n"
+                + "Confirmez votre adresse email avec ce lien :\n"
+                + verificationLink + "\n\n"
+                + "Ce lien est valable 24 heures.\n"
+                + "Nom complet : " + fullName + "\n"
+                + "Nom d'utilisateur : " + usernameValue + "\n"
+                + "Email : " + emailValue + "\n"
+                + "Telephone : " + phoneValue + "\n"
+                + "Nationalite : " + nationalityValue + "\n\n"
+                + "L'equipe YallaTN+";
 
         byte[] welcomeImageBytes = loadWelcomeImageBytes();
         String welcomeImageSrc = (welcomeImageBytes != null && welcomeImageBytes.length > 0)
-            ? "cid:welcome-image"
-            : "";
+                ? "cid:welcome-image"
+                : "";
 
         String html = buildSignupVerificationHtml(
-            displayName,
-            fullName,
-            usernameValue,
-            emailValue,
-            phoneValue,
-            nationalityValue,
-            welcomeImageSrc,
-            verificationLink);
+                displayName,
+                fullName,
+                usernameValue,
+                emailValue,
+                phoneValue,
+                nationalityValue,
+                welcomeImageSrc,
+                verificationLink);
 
         MimeMessage message = userMailSender.createMimeMessage();
         try {
@@ -152,7 +152,8 @@ public class EmailService {
 
         try {
             Path imagePath = Path.of(welcomeImagePath == null ? "" : welcomeImagePath.trim());
-            if (welcomeImagePath != null && !welcomeImagePath.isBlank() && Files.exists(imagePath) && Files.isReadable(imagePath)) {
+            if (welcomeImagePath != null && !welcomeImagePath.isBlank() && Files.exists(imagePath)
+                    && Files.isReadable(imagePath)) {
                 return Files.readAllBytes(imagePath);
             }
         } catch (Exception ignored) {
@@ -247,12 +248,12 @@ public class EmailService {
         String bodyHtml = "Votre départ est prévu dans environ <strong>une heure</strong>.<br/><br/>"
                 + "<strong>Référence</strong> : " + safeRef + "<br/>"
                 + "<strong>Trajet</strong> : " + safeRoute + "<br/>"
-            + "<strong>Départ après</strong> : environ 1h (prévu le " + safeWhen + ")<br/><br/>"
+                + "<strong>Départ après</strong> : environ 1h (prévu le " + safeWhen + ")<br/><br/>"
                 + "Votre billet QR est joint à cet e-mail. Présentez-le à l'embarquement.";
         String plain = "Bonjour " + displayName + ",\n\n"
                 + "Rappel : votre transport (" + reservationRef + ") part dans environ une heure.\n"
                 + "Trajet : " + routeLabel + "\n"
-            + "Départ après : environ 1h (prévu le " + departureWhenLabel + ")\n\n"
+                + "Départ après : environ 1h (prévu le " + departureWhenLabel + ")\n\n"
                 + "Le QR code est en pièce jointe (ticket-qr.png).\n\n"
                 + "— YallaTN+";
         String tripsUrl = frontendBaseUrl + "/mes-reservations?tab=transport";
@@ -284,7 +285,10 @@ public class EmailService {
         }
     }
 
-    /** Confirmation after transport booking is paid (e.g. PayPal capture); includes boarding QR PNG. */
+    /**
+     * Confirmation after transport booking is paid (e.g. PayPal capture); includes
+     * boarding QR PNG.
+     */
     public void sendTransportBookingConfirmation(
             String toEmail,
             String firstName,
@@ -324,8 +328,8 @@ public class EmailService {
 
         MimeMessage message = userMailSender.createMimeMessage();
         try {
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    "UTF-8");
             helper.setFrom(userFromAddress);
             helper.setTo(toEmail);
             helper.setSubject(subject);
@@ -375,12 +379,13 @@ public class EmailService {
         String ctaPath = approved ? "/artisan" : "/profile";
         String bodyHtml = approved
                 ? "Great news! Your artisan request has been <strong>approved</strong>.<br/>"
-                    + "You can now publish products and manage your artisan orders from your dashboard."
+                        + "You can now publish products and manage your artisan orders from your dashboard."
                 : "Your artisan request was reviewed and is currently <strong>not approved</strong>.<br/>"
-                    + "Please update your profile information and contact support if you need help.";
+                        + "Please update your profile information and contact support if you need help.";
         String plain = approved
                 ? "Hi " + displayName + ", your artisan request is approved. You can now access the artisan dashboard."
-                : "Hi " + displayName + ", your artisan request was reviewed and is not approved for now. Please update your profile and retry.";
+                : "Hi " + displayName
+                        + ", your artisan request was reviewed and is not approved for now. Please update your profile and retry.";
 
         String targetUrl = frontendBaseUrl + ctaPath;
         String html = buildTravelEmailHtml(
@@ -396,7 +401,8 @@ public class EmailService {
         sendEmail(userMailSender, userFromAddress, toEmail, subject, plain, html);
     }
 
-        public void sendEventJoinConfirmation(String toEmail, String firstName, String eventTitle, java.util.Date startDate, String venue) {
+    public void sendEventJoinConfirmation(String toEmail, String firstName, String eventTitle, java.util.Date startDate,
+            String venue) {
         String displayName = (firstName == null || firstName.isBlank()) ? "traveler" : firstName;
         String subject = "YallaTN+ - Event registration confirmed";
         String dateTimeLabel = formatEventDateTime(startDate);
@@ -404,29 +410,29 @@ public class EmailService {
         String safeVenue = venue == null || venue.isBlank() ? "TBA" : venue;
 
         String plain = "Hi " + displayName + ",\n\n"
-            + "Your event registration is confirmed.\n"
-            + "Event: " + safeEventTitle + "\n"
-            + "Date & Time: " + dateTimeLabel + "\n"
-            + "Venue: " + safeVenue + "\n\n"
-            + "Thank you for joining YallaTN+.";
+                + "Your event registration is confirmed.\n"
+                + "Event: " + safeEventTitle + "\n"
+                + "Date & Time: " + dateTimeLabel + "\n"
+                + "Venue: " + safeVenue + "\n\n"
+                + "Thank you for joining YallaTN+.";
 
         String html = buildTravelEmailHtml(
-            "Event registration confirmed",
-            "You are successfully registered.",
-            "Your registration is confirmed for <strong>" + escapeHtml(safeEventTitle) + "</strong>.<br/>"
-                + "Date &amp; Time: <strong>" + escapeHtml(dateTimeLabel) + "</strong><br/>"
-                + "Venue: <strong>" + escapeHtml(safeVenue) + "</strong>",
-            true,
-            "View events",
-            frontendBaseUrl + "/evenements",
-            "We look forward to seeing you there.",
-            displayName,
-            "Your event registration is confirmed.");
+                "Event registration confirmed",
+                "You are successfully registered.",
+                "Your registration is confirmed for <strong>" + escapeHtml(safeEventTitle) + "</strong>.<br/>"
+                        + "Date &amp; Time: <strong>" + escapeHtml(dateTimeLabel) + "</strong><br/>"
+                        + "Venue: <strong>" + escapeHtml(safeVenue) + "</strong>",
+                true,
+                "View events",
+                frontendBaseUrl + "/evenements",
+                "We look forward to seeing you there.",
+                displayName,
+                "Your event registration is confirmed.");
 
         sendEmail(userMailSender, userFromAddress, toEmail, subject, plain, html);
-        }
+    }
 
-        public void sendCommentModerationWarningEmail(
+    public void sendCommentModerationWarningEmail(
             String toEmail,
             String firstName,
             java.util.Date mutedUntil,
@@ -437,30 +443,30 @@ public class EmailService {
         String safeCategories = (categories == null || categories.isBlank()) ? "abusive language" : categories;
 
         String plain = "Hi " + displayName + ",\n\n"
-            + "Your latest community comment contained prohibited language.\n"
-            + "Your commenting is temporarily locked until " + untilLabel + ".\n"
-            + "Detected categories: " + safeCategories + "\n\n"
-            + "Please respect community rules to avoid longer bans.\n"
-            + "- YallaTN+";
+                + "Your latest community comment contained prohibited language.\n"
+                + "Your commenting is temporarily locked until " + untilLabel + ".\n"
+                + "Detected categories: " + safeCategories + "\n\n"
+                + "Please respect community rules to avoid longer bans.\n"
+                + "- YallaTN+";
 
         String html = buildTravelEmailHtml(
-            "Community warning",
-            "Please keep comments respectful.",
-            "Your latest community comment triggered our moderation policy.<br/>"
-                + "Commenting is temporarily locked until <strong>" + escapeHtml(untilLabel) + "</strong>.<br/>"
-                + "Detected categories: <strong>" + escapeHtml(safeCategories) + "</strong>.<br/><br/>"
-                + "Further violations can result in multi-day account bans.",
-            true,
-            "Open community",
-            frontendBaseUrl + "/community",
-            "Second offense: 15-minute lock applied.",
-            displayName,
-            "Your community commenting is temporarily locked.");
+                "Community warning",
+                "Please keep comments respectful.",
+                "Your latest community comment triggered our moderation policy.<br/>"
+                        + "Commenting is temporarily locked until <strong>" + escapeHtml(untilLabel) + "</strong>.<br/>"
+                        + "Detected categories: <strong>" + escapeHtml(safeCategories) + "</strong>.<br/><br/>"
+                        + "Further violations can result in multi-day account bans.",
+                true,
+                "Open community",
+                frontendBaseUrl + "/community",
+                "Second offense: 15-minute lock applied.",
+                displayName,
+                "Your community commenting is temporarily locked.");
 
         sendEmail(userMailSender, userFromAddress, toEmail, subject, plain, html);
-        }
+    }
 
-        public void sendCommentBanEmail(
+    public void sendCommentBanEmail(
             String toEmail,
             String firstName,
             java.util.Date expiresAt,
@@ -468,31 +474,32 @@ public class EmailService {
             String categories) {
         String displayName = (firstName == null || firstName.isBlank()) ? "traveler" : firstName;
         String subject = "YallaTN+ - Community ban applied";
-        String untilLabel = expiresAt == null ? "indefinite" : new SimpleDateFormat("dd/MM/yyyy HH:mm").format(expiresAt);
+        String untilLabel = expiresAt == null ? "indefinite"
+                : new SimpleDateFormat("dd/MM/yyyy HH:mm").format(expiresAt);
         String safeCategories = (categories == null || categories.isBlank()) ? "abusive language" : categories;
 
         String plain = "Hi " + displayName + ",\n\n"
-            + "Because of repeated abusive community comments, your account is banned for " + banDays + " days.\n"
-            + "Ban ends: " + untilLabel + "\n"
-            + "Detected categories: " + safeCategories + "\n\n"
-            + "Please follow community guidelines when access is restored.\n"
-            + "- YallaTN+";
+                + "Because of repeated abusive community comments, your account is banned for " + banDays + " days.\n"
+                + "Ban ends: " + untilLabel + "\n"
+                + "Detected categories: " + safeCategories + "\n\n"
+                + "Please follow community guidelines when access is restored.\n"
+                + "- YallaTN+";
 
         String html = buildTravelEmailHtml(
-            "Community ban",
-            "Repeated abusive comments detected.",
-            "Your account is now banned from community activity for <strong>" + banDays + " days</strong>.<br/>"
-                + "Ban end date: <strong>" + escapeHtml(untilLabel) + "</strong>.<br/>"
-                + "Detected categories: <strong>" + escapeHtml(safeCategories) + "</strong>.",
-            true,
-            "Review community rules",
-            frontendBaseUrl + "/community",
-            "Future violations will increase ban duration.",
-            displayName,
-            "A temporary community ban has been applied to your account.");
+                "Community ban",
+                "Repeated abusive comments detected.",
+                "Your account is now banned from community activity for <strong>" + banDays + " days</strong>.<br/>"
+                        + "Ban end date: <strong>" + escapeHtml(untilLabel) + "</strong>.<br/>"
+                        + "Detected categories: <strong>" + escapeHtml(safeCategories) + "</strong>.",
+                true,
+                "Review community rules",
+                frontendBaseUrl + "/community",
+                "Future violations will increase ban duration.",
+                displayName,
+                "A temporary community ban has been applied to your account.");
 
         sendEmail(userMailSender, userFromAddress, toEmail, subject, plain, html);
-        }
+    }
 
     private void sendEmail(
             JavaMailSender sender,
@@ -520,7 +527,8 @@ public class EmailService {
     }
 
     /**
-     * @param bodyContent plain text (escaped) or trusted HTML when bodyIsHtml is true
+     * @param bodyContent plain text (escaped) or trusted HTML when bodyIsHtml is
+     *                    true
      */
     private String buildTravelEmailHtml(
             String title,
@@ -632,8 +640,9 @@ public class EmailService {
         String safeLink = escapeHtml(verificationLink);
         String safeCharacterImageUrl = escapeHtml(welcomeImageSrc);
         String imageHtml = safeCharacterImageUrl.isBlank()
-            ? "<div style=\"display:inline-block;padding:10px 14px;border-radius:10px;background:#e2e8f0;color:#334155;font-size:13px;\">Welcome image unavailable</div>"
-            : "<img src=\"" + safeCharacterImageUrl + "\" alt=\"Voyageur\" width=\"620\" style=\"width:100%;max-width:620px;height:auto;display:block;border-radius:12px;box-shadow:0 10px 24px rgba(15,23,42,0.18);\" />";
+                ? "<div style=\"display:inline-block;padding:10px 14px;border-radius:10px;background:#e2e8f0;color:#334155;font-size:13px;\">Welcome image unavailable</div>"
+                : "<img src=\"" + safeCharacterImageUrl
+                        + "\" alt=\"Voyageur\" width=\"620\" style=\"width:100%;max-width:620px;height:auto;display:block;border-radius:12px;box-shadow:0 10px 24px rgba(15,23,42,0.18);\" />";
 
         return """
                 <!doctype html>
@@ -753,17 +762,18 @@ public class EmailService {
                     </table>
                 </body>
                 </html>
-                """.formatted(
-                imageHtml,
-                safeFirstName,
-                safeFullName,
-                safeUsername,
-                safeEmail,
-                safePhone,
-                safeNationality,
-                safeLink,
-                safeLink,
-                safeLink);
+                """
+                .formatted(
+                        imageHtml,
+                        safeFirstName,
+                        safeFullName,
+                        safeUsername,
+                        safeEmail,
+                        safePhone,
+                        safeNationality,
+                        safeLink,
+                        safeLink,
+                        safeLink);
     }
 
     private static String fallbackValue(String value, String fallback) {
@@ -814,22 +824,22 @@ public class EmailService {
                 String participant = (participantNames != null && i < participantNames.size())
                         ? participantNames.get(i)
                         : ("Participant " + (i + 1));
-            String cid = "event-ticket-qr-" + i;
-            b.append("<div style=\"border:1px solid #e6eef7;border-radius:12px;padding:10px;background:#ffffff;\">")
-                .append("<div style=\"font-weight:700;color:#1f2937;margin-bottom:4px;\">Ticket #")
+                String cid = "event-ticket-qr-" + i;
+                b.append("<div style=\"border:1px solid #e6eef7;border-radius:12px;padding:10px;background:#ffffff;\">")
+                        .append("<div style=\"font-weight:700;color:#1f2937;margin-bottom:4px;\">Ticket #")
                         .append(i + 1)
-                .append("</div><div style=\"margin-bottom:4px;color:#334155;\">Participant: ")
+                        .append("</div><div style=\"margin-bottom:4px;color:#334155;\">Participant: ")
                         .append(escapeHtml(participant))
-                .append("</div><div style=\"margin:8px 0;text-align:center;\"><img src=\"cid:")
-                .append(cid)
-                .append("\" alt=\"QR Code\" style=\"width:170px;height:170px;border:1px solid #e6eef7;border-radius:10px;padding:6px;background:#fff;\"/></div>")
-                .append("<div style=\"font-family:monospace;color:#475569;word-break:break-all;\">QR: ")
+                        .append("</div><div style=\"margin:8px 0;text-align:center;\"><img src=\"cid:")
+                        .append(cid)
+                        .append("\" alt=\"QR Code\" style=\"width:170px;height:170px;border:1px solid #e6eef7;border-radius:10px;padding:6px;background:#fff;\"/></div>")
+                        .append("<div style=\"font-family:monospace;color:#475569;word-break:break-all;\">QR: ")
                         .append(escapeHtml(token))
-                .append("</div></div>");
+                        .append("</div></div>");
 
                 ticketDetailsPlain.append("Ticket #")
                         .append(i + 1)
-                .append(" - Participant: ")
+                        .append(" - Participant: ")
                         .append(participant)
                         .append(" - QR: ")
                         .append(token)
@@ -865,13 +875,13 @@ public class EmailService {
                     </table>
                 </body>
                 </html>
-                """.formatted(
-                escapeHtml(displayName),
-                safeEventTitle,
-                safeVenue,
-                escapeHtml(eventDateTime),
-                ticketDetailsHtml
-        );
+                """
+                .formatted(
+                        escapeHtml(displayName),
+                        safeEventTitle,
+                        safeVenue,
+                        escapeHtml(eventDateTime),
+                        ticketDetailsHtml);
 
         String plain = "Hi " + displayName + ",\n\n"
                 + "Your event reservation is confirmed.\n"

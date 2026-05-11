@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ludification/quizzes")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class QuizController {
 
     private final QuizService quizService;

@@ -1,0 +1,7 @@
+# Ignore heavy directories so Docker build context stays small
+node_modules/
+dist/
+.angular/
+.git/
+.gitignore
+*.md

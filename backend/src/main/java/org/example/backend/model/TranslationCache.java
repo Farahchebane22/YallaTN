@@ -21,7 +21,7 @@ public class TranslationCache {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "cache_key", nullable = false, unique = true, length = 800)
+    @Column(name = "cache_key", nullable = false, unique = true, length = 768)
     private String cacheKey;
 
     @Column(name = "target_lang", nullable = false, length = 10)

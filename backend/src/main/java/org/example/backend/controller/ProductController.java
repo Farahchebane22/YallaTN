@@ -1,15 +1,8 @@
 package org.example.backend.controller;
 
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.UUID;
 import org.example.backend.dto.ProductCatalogItem;
 import org.example.backend.model.Product;
 import org.example.backend.service.ProductService;
@@ -29,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.example.backend.service.ImageDescriptionService;
+import org.example.backend.service.SwiftStorageService;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -37,8 +31,8 @@ public class ProductController {
     private final ProductService productService;
     private final ImageDescriptionService imageDescriptionService;
 
-    @Value("${app.upload.dir:uploads}")
-    private String uploadDir;
+    @org.springframework.beans.factory.annotation.Autowired
+    private SwiftStorageService swiftStorageService;
 
     public ProductController(ProductService productService, ImageDescriptionService imageDescriptionService) {
         this.productService = productService;
@@ -51,18 +45,8 @@ public class ProductController {
             return ResponseEntity.badRequest().build();
         }
         try {
-            String originalName = file.getOriginalFilename() == null ? "image" : file.getOriginalFilename();
-            String extension = "";
-            int dotIndex = originalName.lastIndexOf('.');
-            if (dotIndex >= 0) {
-                extension = originalName.substring(dotIndex);
-            }
-            String fileName = UUID.randomUUID() + extension;
-            Path targetDir = Paths.get(uploadDir, "products").toAbsolutePath().normalize();
-            Files.createDirectories(targetDir);
-            Path target = targetDir.resolve(fileName);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-            return ResponseEntity.ok(Map.of("imageUrl", "/uploads/products/" + fileName));
+            String imageUrl = swiftStorageService.uploadFile(file);
+            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -85,22 +69,7 @@ public class ProductController {
 
     @PostMapping(path = "/describe-image/local")
     public ResponseEntity<Map<String, String>> describeLocalImage(@RequestParam("filename") String filename) {
-        if (filename == null || filename.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Filename is required."));
-        }
-        try {
-            Path filePath = Paths.get(uploadDir, "products", filename).toAbsolutePath().normalize();
-            Path baseDir = Paths.get(uploadDir, "products").toAbsolutePath().normalize();
-            if (!filePath.startsWith(baseDir) || !Files.exists(filePath) || !Files.isRegularFile(filePath)) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Local image not found."));
-            }
-            String description = imageDescriptionService.describeImageFromLocalPath(filePath);
-            return ResponseEntity.ok(Map.of("description", description));
-        } catch (Exception ex) {
-            String message = ex.getMessage() != null ? ex.getMessage() : "Could not describe local image.";
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", message));
-        }
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(Map.of("error", "Local image analysis disabled for Swift storage."));
     }
 
     @GetMapping
@@ -147,7 +116,7 @@ public class ProductController {
         try {
             ProductCatalogItem created = productService.save(entity, username);
             return ResponseEntity
-                .created(URI.create("/api/products/" + created.productId()))
+                .created(java.net.URI.create("/api/products/" + created.productId()))
                 .body(created);
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode())

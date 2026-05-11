@@ -108,4 +108,4 @@ with gr.Blocks(title="Zero Trust AI") as demo:
     )
 
 if __name__ == "__main__":
-    demo.launch(server_name="127.0.0.1")
+    demo.launch(server_name="0.0.0.0", server_port=7860)

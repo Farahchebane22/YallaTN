@@ -14,7 +14,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ludification/roadmap")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class UserRoadmapCompletionController {
 
     private final UserRoadmapCompletionService completionService;

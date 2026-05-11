@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/gamification")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class GamificationRestController {
 
     private final GamificationService gamificationService;
@@ -80,7 +80,8 @@ public class GamificationRestController {
         GameUnlockCost cost = gameUnlockCostRepository.findById(gameId)
                 .orElse(null);
 
-        // If there is no cost defined, it might be free, but let's assume it requires 0 or we reject.
+        // If there is no cost defined, it might be free, but let's assume it requires 0
+        // or we reject.
         int requiredPoints = (cost != null && cost.getCostPoints() != null) ? cost.getCostPoints() : 0;
 
         if (requiredPoints > 0 && (user.getPoints() == null || user.getPoints() < requiredPoints)) {

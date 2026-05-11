@@ -25,7 +25,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @RestController
 @RequestMapping("/api/admin/gamification")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class GamificationAdminController {
 
     private final BadgeRepository badgeRepository;
@@ -115,16 +115,17 @@ public class GamificationAdminController {
 
         try {
             jdbcTemplate.update(
-                "INSERT INTO user_notifications (user_id, type, title, message, is_read, created_at, route) " +
-                "SELECT user_id, 'GAME', 'New Daily Challenge', 'A new daily challenge has been added. Play now!', false, NOW(), ? " +
-                    "FROM users WHERE status IS NULL OR status != 'BANNED'"
-                , challengeRoute
-            );
+                    "INSERT INTO user_notifications (user_id, type, title, message, is_read, created_at, route) " +
+                            "SELECT user_id, 'GAME', 'New Daily Challenge', 'A new daily challenge has been added. Play now!', false, NOW(), ? "
+                            +
+                            "FROM users WHERE status IS NULL OR status != 'BANNED'",
+                    challengeRoute);
 
-            List<Map<String, Object>> users = jdbcTemplate.queryForList("SELECT username, email FROM users WHERE status IS NULL OR status != 'BANNED'");
+            List<Map<String, Object>> users = jdbcTemplate
+                    .queryForList("SELECT username, email FROM users WHERE status IS NULL OR status != 'BANNED'");
             Map<String, Object> payload = new LinkedHashMap<>();
             // Assuming random id for realtime payload since it's mass inserted
-            payload.put("notificationId", (int)(Math.random() * 1000000));
+            payload.put("notificationId", (int) (Math.random() * 1000000));
             payload.put("type", "GAME");
             payload.put("title", "New Daily Challenge");
             payload.put("message", "A new daily challenge has been added. Play now!");
@@ -152,10 +153,9 @@ public class GamificationAdminController {
 
     @PutMapping("/daily-challenges/{id}")
     public DailyChallenge updateChallenge(@PathVariable Integer id, @RequestBody DailyChallengeRequest req) {
-        DailyChallenge c =
-                dailyChallengeRepository
-                        .findById(id)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        DailyChallenge c = dailyChallengeRepository
+                .findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         applyChallenge(c, req);
         return dailyChallengeRepository.save(c);
     }
@@ -210,8 +210,6 @@ public class GamificationAdminController {
         };
     }
 
-
-
     @GetMapping("/unlock-costs")
     public List<GameUnlockCost> listUnlockCosts() {
         return gameUnlockCostRepository.findAll();
@@ -249,7 +247,8 @@ public class GamificationAdminController {
 
     @PutMapping("/point-packages/{id}")
     public PointPackage updatePointPackage(@PathVariable Long id, @RequestBody PointPackage req) {
-        PointPackage pkg = pointPackageRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        PointPackage pkg = pointPackageRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (req.getName() != null && !req.getName().isBlank()) {
             pkg.setName(req.getName());
         }

@@ -39,7 +39,10 @@ public class AuthController {
     @Value("${app.recaptcha.site-key:}")
     private String recaptchaSiteKey;
 
-    /** {@code v2} = checkbox widget · {@code v3} = score-based (grecaptcha.execute). Must match your keys in Google Admin. */
+    /**
+     * {@code v2} = checkbox widget · {@code v3} = score-based (grecaptcha.execute).
+     * Must match your keys in Google Admin.
+     */
     @Value("${app.recaptcha.version:v2}")
     private String recaptchaVersion;
 
@@ -67,11 +70,15 @@ public class AuthController {
     @Value("${app.oauth2.instagram-client-secret}")
     private String instagramClientSecret;
 
-    /** Browser hits on POST-only routes (e.g. opening /api/auth/signup in a tab) redirect here. */
-    @Value("${app.public.url:http://localhost:4200}")
+    /**
+     * Browser hits on POST-only routes (e.g. opening /api/auth/signup in a tab)
+     * redirect here.
+     */
+    @Value("${app.public.url:https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String publicAppBaseUrl;
 
-    public AuthController(AuthService authService, RecaptchaService recaptchaService, LoginRiskService loginRiskService) {
+    public AuthController(AuthService authService, RecaptchaService recaptchaService,
+            LoginRiskService loginRiskService) {
         this.authService = authService;
         this.recaptchaService = recaptchaService;
         this.loginRiskService = loginRiskService;
@@ -128,7 +135,8 @@ public class AuthController {
             boolean githubConfigured = isConfigured(githubClientId, githubClientSecret);
             boolean facebookConfigured = isConfigured(facebookClientId, facebookClientSecret);
             boolean instagramConfigured = isConfigured(instagramClientId, instagramClientSecret);
-            return new SocialProvidersResponse(googleConfigured, githubConfigured, facebookConfigured, instagramConfigured);
+            return new SocialProvidersResponse(googleConfigured, githubConfigured, facebookConfigured,
+                    instagramConfigured);
         } catch (Exception ignored) {
             return new SocialProvidersResponse(false, false, false, false);
         }
@@ -136,11 +144,11 @@ public class AuthController {
 
     private boolean isConfigured(String clientId, String clientSecret) {
         return clientId != null
-            && clientSecret != null
-            && !clientId.isBlank()
-            && !clientSecret.isBlank()
-            && !clientId.startsWith("disabled-")
-            && !clientSecret.startsWith("disabled-");
+                && clientSecret != null
+                && !clientId.isBlank()
+                && !clientSecret.isBlank()
+                && !clientId.startsWith("disabled-")
+                && !clientSecret.startsWith("disabled-");
     }
 
     @GetMapping("/verify-email")
@@ -153,7 +161,9 @@ public class AuthController {
         return authService.resendVerification(request);
     }
 
-    /** GET → SPA so users are not stuck on 405 when opening the API URL by mistake. */
+    /**
+     * GET → SPA so users are not stuck on 405 when opening the API URL by mistake.
+     */
     @GetMapping("/resend-verification")
     public ResponseEntity<Void> resendVerificationGetRedirect(HttpServletRequest request) {
         return redirectToPublicPath(request, "/signin");
@@ -176,7 +186,8 @@ public class AuthController {
 
     /**
      * GET /api/auth/reset-password → SPA reset form (POST stays JSON-only).
-     * Query string (e.g. token from email) is preserved when present on the incoming request.
+     * Query string (e.g. token from email) is preserved when present on the
+     * incoming request.
      */
     @GetMapping("/reset-password")
     public ResponseEntity<Void> resetPasswordGetRedirect(HttpServletRequest request) {

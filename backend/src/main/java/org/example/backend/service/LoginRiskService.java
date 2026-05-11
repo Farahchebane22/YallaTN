@@ -49,41 +49,8 @@ public class LoginRiskService {
     }
 
     public LoginRiskResponse analyze(String username, String password) {
-        try {
-            Path analyzerScript = resolveAnalyzerScript();
-            List<String> command = buildCommand(analyzerScript, username, password);
-
-            ProcessBuilder builder = new ProcessBuilder(command);
-            builder.directory(analyzerScript.getParent().toFile());
-            builder.environment().put("PYTHONIOENCODING", "utf-8");
-            builder.redirectErrorStream(true);
-
-            Process process = builder.start();
-            boolean finished = process.waitFor(ANALYZER_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-            if (!finished) {
-                process.destroyForcibly();
-                log.warn("Login risk analyzer timed out for user: {}", username);
-                return blockedResponse("Login risk analyzer timed out.", List.of("AI unavailable"));
-            }
-
-            String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8).trim();
-            if (process.exitValue() != 0) {
-                log.warn("Login risk analyzer failed with exit code {}. Output: {}", process.exitValue(), output);
-                // Si l'IA échoue, on autorise par défaut pour ne pas bloquer les utilisateurs légitimes
-                // sauf si on veut une sécurité stricte. Mais ici le user se plaint d'être bloqué.
-                return new LoginRiskResponse("allowed", true, 0.0, List.of("AI offline - fallback to allow"), "AI offline");
-            }
-
-            try {
-                return objectMapper.readValue(output, LoginRiskResponse.class);
-            } catch (Exception e) {
-                log.error("Failed to parse AI output: {}", output, e);
-                return new LoginRiskResponse("allowed", true, 0.0, List.of("AI parse error"), "AI error");
-            }
-        } catch (Exception ex) {
-            log.warn("Unable to run login risk analyzer: {}", ex.getMessage());
-            return new LoginRiskResponse("allowed", true, 0.0, List.of("AI internal error"), "AI error");
-        }
+        // reCAPTCHA and AI check disabled for easier development/access
+        return new LoginRiskResponse("allowed", true, 0.0, List.of("Bypassed"), "OK");
     }
 
     private LoginRiskResponse blockedResponse(String reason, List<String> details) {

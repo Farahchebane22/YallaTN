@@ -20,6 +20,9 @@ public class DataInitializer {
     @Value("${app.translation.enabled:true}")
     private boolean translationEnabled;
 
+    @Value("${app.seeder.travel.enabled:true}")
+    private boolean seederTravelEnabled;
+
     @Bean
     ApplicationRunner userSeeder(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         return args -> {
@@ -117,6 +120,10 @@ public class DataInitializer {
             TransportRepository transportRepository,
             CatalogTranslationRepository catalogTranslationRepository) {
         return args -> {
+            if (!seederTravelEnabled) {
+                System.out.println("Travel seeder disabled.");
+                return;
+            }
             // Seed Levels if empty
             if (levelRepository.count() == 0) {
                 levelRepository.saveAll(List.of(

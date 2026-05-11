@@ -1,4 +1,5 @@
 package org.example.backend.service;
+
 import org.springframework.http.HttpStatus;
 import org.example.backend.dto.AuthMessageResponse;
 import org.example.backend.dto.AuthResponse;
@@ -79,24 +80,27 @@ public class AuthService {
     private final AuditService auditService;
     private final RecaptchaService recaptchaService;
 
-    @Value("${app.frontend.base-url:http://localhost:4200}")
+    @Value("${app.frontend.base-url:https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String frontendBaseUrl;
 
-    /** Si {@code false}, connexion possible sans lien de vérification e-mail (pratique en local ; garder {@code true} en prod). */
+    /**
+     * Si {@code false}, connexion possible sans lien de vérification e-mail
+     * (pratique en local ; garder {@code true} en prod).
+     */
     @Value("${app.auth.require-email-verified-for-signin:true}")
     private boolean requireEmailVerifiedForSignin;
 
     public AuthService(UserRepository userRepository,
-                       RoleRepository roleRepository,
-                       PasswordEncoder passwordEncoder,
-                       @Lazy AuthenticationManager authenticationManager,
-                       JwtService jwtService,
-                       BanRepository banRepository,
-                       CityRepository cityRepository,
-                       VerificationTokenRepository verificationTokenRepository,
-                       EmailService emailService,
-                       AuditService auditService,
-                       RecaptchaService recaptchaService) {
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder,
+            @Lazy AuthenticationManager authenticationManager,
+            JwtService jwtService,
+            BanRepository banRepository,
+            CityRepository cityRepository,
+            VerificationTokenRepository verificationTokenRepository,
+            EmailService emailService,
+            AuditService auditService,
+            RecaptchaService recaptchaService) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -159,7 +163,7 @@ public class AuthService {
         user.setDateOfBirth(request.dateOfBirth());
         if (becomeArtisant && !isTunisiaNationality(user.getNationality())) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                "Artisan request is available only for Tunisian nationality");
+                    "Artisan request is available only for Tunisian nationality");
         }
         user.setCity(resolveCityForNationality(user.getNationality(), request.cityId()));
         user.setEmailVerified(false);
@@ -183,17 +187,16 @@ public class AuthService {
         } catch (MailException ex) {
             return new AuthMessageResponse(
                     "Account created. Verification email could not be sent (SMTP). "
-                            + "Use “Resend verification link” on the sign-in page once mail is configured."
-            );
+                            + "Use “Resend verification link” on the sign-in page once mail is configured.");
         }
 
         return new AuthMessageResponse(
-                "Account created. Open the email we just sent and click the link to activate your account before signing in."
-        );
+                "Account created. Open the email we just sent and click the link to activate your account before signing in.");
     }
 
     /**
-     * Read-only transaction keeps the persistence context open so {@link #toUserSummary(User)}
+     * Read-only transaction keeps the persistence context open so
+     * {@link #toUserSummary(User)}
      * can initialize lazy associations ({@code city}, {@code level}) safely.
      */
     @Transactional(noRollbackFor = ResponseStatusException.class)
@@ -204,8 +207,7 @@ public class AuthService {
         Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.identifier(), request.password())
-            );
+                    new UsernamePasswordAuthenticationToken(request.identifier(), request.password()));
         } catch (BadCredentialsException ex) {
             if (candidate.isPresent()) {
                 handleFailedSignin(candidate.get());
@@ -271,7 +273,7 @@ public class AuthService {
         String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
         String currentNormalizedEmail = previousEmail == null ? "" : previousEmail.trim().toLowerCase(Locale.ROOT);
         if (!normalizedEmail.equals(currentNormalizedEmail)
-            && userRepository.existsByEmailIgnoreCaseAndUserIdNot(normalizedEmail, user.getUserId())) {
+                && userRepository.existsByEmailIgnoreCaseAndUserIdNot(normalizedEmail, user.getUserId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "api.error.duplicate_email");
         }
 
@@ -332,7 +334,8 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sessionId is required");
         }
         if (currentSessionId != null && currentSessionId.equals(sessionId)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot revoke current session from this endpoint");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Cannot revoke current session from this endpoint");
         }
         // Session persistence is not enabled in this build.
     }
@@ -347,7 +350,8 @@ public class AuthService {
     public AuthMessageResponse verifyEmail(String token) {
         VerificationToken verificationToken = verificationTokenRepository
                 .findByTokenAndTokenType(token, TOKEN_TYPE_EMAIL_VERIFICATION)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "api.error.auth.invalid_verification_token"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "api.error.auth.invalid_verification_token"));
 
         validateUsableToken(verificationToken);
 
@@ -364,7 +368,9 @@ public class AuthService {
     @Transactional
     public AuthMessageResponse resendVerification(ResendVerificationRequest request) {
         String normalizedIdentifier = request.identifier().trim().toLowerCase(Locale.ROOT);
-        userRepository.findFirstByUsernameIgnoreCaseOrEmailIgnoreCaseOrderByUserIdAsc(normalizedIdentifier, normalizedIdentifier)
+        userRepository
+                .findFirstByUsernameIgnoreCaseOrEmailIgnoreCaseOrderByUserIdAsc(normalizedIdentifier,
+                        normalizedIdentifier)
                 .ifPresent(user -> {
                     if (Boolean.TRUE.equals(user.getEmailVerified())) {
                         return;
@@ -379,7 +385,7 @@ public class AuthService {
                                 user.getUsername(),
                                 user.getPhone(),
                                 user.getNationality(),
-                            user.getGender(),
+                                user.getGender(),
                                 verificationLink);
                     } catch (MailException ex) {
                         throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "api.error.auth.email_send_failed");
@@ -424,7 +430,8 @@ public class AuthService {
     public AuthMessageResponse resetPassword(ResetPasswordRequest request) {
         VerificationToken verificationToken = verificationTokenRepository
                 .findByTokenAndTokenType(request.token(), TOKEN_TYPE_RESET_PASSWORD)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "api.error.auth.invalid_reset_token"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "api.error.auth.invalid_reset_token"));
 
         validateUsableToken(verificationToken);
 
@@ -444,7 +451,8 @@ public class AuthService {
         return new AuthMessageResponse("Password reset successfully.");
     }
 
-    private User createSocialUser(String email, String firstName, String lastName, String provider, String usernameSeed) {
+    private User createSocialUser(String email, String firstName, String lastName, String provider,
+            String usernameSeed) {
         Role userRole = roleRepository.findByName(DEFAULT_ROLE)
                 .orElseGet(() -> {
                     Role role = new Role();
@@ -579,7 +587,8 @@ public class AuthService {
             return "Utilisateur";
         }
         String[] parts = name.trim().split("\\s+");
-        return parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length)) : "Utilisateur";
+        return parts.length > 1 ? String.join(" ", java.util.Arrays.copyOfRange(parts, 1, parts.length))
+                : "Utilisateur";
     }
 
     private UserDetails toUserDetails(User user) {
@@ -609,8 +618,7 @@ public class AuthService {
             userRepository.save(user);
             throw new ResponseStatusException(
                     HttpStatus.LOCKED,
-                    "ui:Compte bloqué après 3 tentatives. Réessayez après " + formatLoginLockUntil(lockedUntil) + "."
-            );
+                    "ui:Compte bloqué après 3 tentatives. Réessayez après " + formatLoginLockUntil(lockedUntil) + ".");
         }
 
         user.setFailedLoginAttempts(attempts);
@@ -618,8 +626,7 @@ public class AuthService {
         log.warn("Failed sign-in for user id={}, attempts={}", user.getUserId(), attempts);
         throw new ResponseStatusException(
                 HttpStatus.UNAUTHORIZED,
-                "ui:Identifiant ou mot de passe invalide. Tentative " + attempts + " sur " + MAX_FAILED_ATTEMPTS + "."
-        );
+                "ui:Identifiant ou mot de passe invalide. Tentative " + attempts + " sur " + MAX_FAILED_ATTEMPTS + ".");
     }
 
     private void ensureAccountNotLocked(User user) {
@@ -632,8 +639,7 @@ public class AuthService {
         if (lockedUntil.after(now)) {
             throw new ResponseStatusException(
                     HttpStatus.LOCKED,
-                    "ui:Compte temporairement bloqué jusqu’au " + formatLoginLockUntil(lockedUntil) + "."
-            );
+                    "ui:Compte temporairement bloqué jusqu’au " + formatLoginLockUntil(lockedUntil) + ".");
         }
 
         user.setLockedUntil(null);
@@ -642,7 +648,8 @@ public class AuthService {
     }
 
     private void resetFailedSigninState(User user) {
-        if ((user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() > 0) || user.getLockedUntil() != null) {
+        if ((user.getFailedLoginAttempts() != null && user.getFailedLoginAttempts() > 0)
+                || user.getLockedUntil() != null) {
             user.setFailedLoginAttempts(0);
             user.setLockedUntil(null);
             userRepository.save(user);
@@ -656,14 +663,14 @@ public class AuthService {
         if (!Boolean.TRUE.equals(user.getEmailVerified())) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN,
-                    "ui:Votre adresse e-mail n’est pas vérifiée. Consultez votre boîte de réception pour activer le compte."
-            );
+                    "ui:Votre adresse e-mail n’est pas vérifiée. Consultez votre boîte de réception pour activer le compte.");
         }
     }
 
     private String createToken(User user, String tokenType, long expirationMs) {
         Date now = new Date();
-        List<VerificationToken> previousTokens = verificationTokenRepository.findByUserAndTokenTypeAndUsedAtIsNull(user, tokenType);
+        List<VerificationToken> previousTokens = verificationTokenRepository.findByUserAndTokenTypeAndUsedAtIsNull(user,
+                tokenType);
         for (VerificationToken existing : previousTokens) {
             existing.setUsedAt(now);
         }
@@ -698,19 +705,20 @@ public class AuthService {
         if (nationality == null || nationality.trim().isEmpty()) {
             return null;
         }
-        
+
         boolean tunisian = isTunisiaNationality(nationality);
         if (!tunisian) {
             return null;
         }
-        
+
         // For Tunisian users, cityId is required
         if (cityId == null) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "api.error.auth.city_id_required");
         }
         // Plus besoin de Long.valueOf() si cityRepository accepte les Integer
         return cityRepository.findById(cityId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "api.error.auth.invalid_city_id"));
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "api.error.auth.invalid_city_id"));
     }
 
     private boolean isTunisiaNationality(String nationality) {
@@ -737,7 +745,8 @@ public class AuthService {
 
     private User currentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "api.error.unauthorized");
         }
 
@@ -784,7 +793,6 @@ public class AuthService {
                 user.getCoverImageUrl(),
                 user.getPoints(),
                 user.getMonthlyScore(),
-                user.getLifetimeScore()
-        );
+                user.getLifetimeScore());
     }
 }

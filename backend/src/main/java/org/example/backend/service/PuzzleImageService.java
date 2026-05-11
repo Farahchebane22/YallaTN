@@ -2,6 +2,7 @@ package org.example.backend.service;
 
 import org.example.backend.model.PuzzleImage;
 import org.example.backend.repository.PuzzleImageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
@@ -9,18 +10,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class PuzzleImageService {
 
     public static final Path PUZZLE_UPLOAD_DIR = Paths.get("uploads", "puzzles");
+
+    @Autowired
+    private SwiftStorageService swiftStorageService;
 
     private final PuzzleImageRepository puzzleRepo;
 
@@ -51,24 +53,16 @@ public class PuzzleImageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         try {
-            Files.createDirectories(PUZZLE_UPLOAD_DIR);
-            String ext = "";
-            String original = file.getOriginalFilename();
-            if (original != null && original.lastIndexOf('.') >= 0) {
-                ext = original.substring(original.lastIndexOf('.'));
-            }
-            String filename = UUID.randomUUID() + ext;
-            Path destination = PUZZLE_UPLOAD_DIR.resolve(filename);
-            Files.copy(file.getInputStream(), destination, StandardCopyOption.REPLACE_EXISTING);
+            String imageUrl = swiftStorageService.uploadFile(file);
 
             PuzzleImage puzzle = new PuzzleImage();
             puzzle.setTitle(title);
             puzzle.setPublished(published);
             puzzle.setCreatedAt(new Date());
-            puzzle.setImageDataUrl("/api/ludification/puzzles/files/" + filename);
+            puzzle.setImageDataUrl(imageUrl);
             return puzzleRepo.save(puzzle);
         } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload puzzle to Swift");
         }
     }
 

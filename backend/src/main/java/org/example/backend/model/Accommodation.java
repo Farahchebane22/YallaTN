@@ -42,7 +42,7 @@ public class Accommodation {
     @OneToMany(mappedBy = "accommodation", fetch = FetchType.LAZY)
     private List<Room> rooms;
 
-    public enum AccommodationType { HOTEL, GUESTHOUSE, MAISON_HOTE, AUTRE, ygu, YGU }
+    public enum AccommodationType { HOTEL, GUESTHOUSE, MAISON_HOTE, AUTRE }
 
     public enum AccommodationStatus { AVAILABLE, UNAVAILABLE, ACTIVE }
 }

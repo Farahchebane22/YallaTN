@@ -54,7 +54,7 @@ public class ActivityPaymentController {
     private final UserIdentityResolver userIdentityResolver;
     private final UserNotificationService userNotificationService;
 
-    @Value("${app.frontend.base-url:http://localhost:4200}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${stripe.checkout.currency:usd}")
@@ -66,14 +66,13 @@ public class ActivityPaymentController {
     @PostMapping("/activities/{activityId}/reservations/checkout")
     @Transactional
     public ResponseEntity<?> createCheckoutSession(
-        @PathVariable Integer activityId,
-        @Valid @RequestBody CreateActivityReservationRequest request
-    ) {
+            @PathVariable Integer activityId,
+            @Valid @RequestBody CreateActivityReservationRequest request) {
         try {
             String effectiveStripeKey = resolveStripeApiKey();
             if (effectiveStripeKey == null || effectiveStripeKey.isBlank()) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body("Stripe is not configured. Set stripe.api.key or STRIPE_SECRET_KEY.");
+                        .body("Stripe is not configured. Set stripe.api.key or STRIPE_SECRET_KEY.");
             }
 
             Stripe.apiKey = effectiveStripeKey;
@@ -81,7 +80,8 @@ public class ActivityPaymentController {
             ActivityReservation reservation = reservationService.createPendingReservation(activityId, request);
             Activity activity = reservation.getActivity();
             if (activity == null || activity.getActivityId() == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Invalid activity reservation state");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Invalid activity reservation state");
             }
 
             double totalPrice = reservation.getTotalPrice() != null ? reservation.getTotalPrice() : 0.0;
@@ -92,35 +92,36 @@ public class ActivityPaymentController {
 
             String base = normalizeFrontendBase();
             String currency = stripeCheckoutCurrency == null || stripeCheckoutCurrency.isBlank()
-                ? "usd"
-                : stripeCheckoutCurrency.trim().toLowerCase();
+                    ? "usd"
+                    : stripeCheckoutCurrency.trim().toLowerCase();
 
             String activityName = activity.getName() != null && !activity.getName().isBlank()
-                ? activity.getName().trim()
-                : ("Activity #" + activity.getActivityId());
+                    ? activity.getName().trim()
+                    : ("Activity #" + activity.getActivityId());
 
             SessionCreateParams params = SessionCreateParams.builder()
-                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-                .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setClientReferenceId(String.valueOf(reservation.getActivityReservationId()))
-                .setSuccessUrl(base + "/activities/payment-success?session_id={CHECKOUT_SESSION_ID}")
-                .setCancelUrl(base + "/activities/" + activity.getActivityId())
-                .addLineItem(SessionCreateParams.LineItem.builder()
-                    .setQuantity(1L)
-                    .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
-                        .setCurrency(currency)
-                        .setUnitAmount(unitAmountMinor)
-                        .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
-                            .setName("Activity booking: " + activityName)
+                    .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                    .setMode(SessionCreateParams.Mode.PAYMENT)
+                    .setClientReferenceId(String.valueOf(reservation.getActivityReservationId()))
+                    .setSuccessUrl(base + "/activities/payment-success?session_id={CHECKOUT_SESSION_ID}")
+                    .setCancelUrl(base + "/activities/" + activity.getActivityId())
+                    .addLineItem(SessionCreateParams.LineItem.builder()
+                            .setQuantity(1L)
+                            .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
+                                    .setCurrency(currency)
+                                    .setUnitAmount(unitAmountMinor)
+                                    .setProductData(SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                            .setName("Activity booking: " + activityName)
+                                            .build())
+                                    .build())
                             .build())
-                        .build())
-                    .build())
-                .build();
+                    .build();
 
             Session session = Session.create(params);
             String url = session.getUrl();
             if (url == null || url.isBlank()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Stripe did not return a checkout URL");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body("Stripe did not return a checkout URL");
             }
 
             return ResponseEntity.ok(new ActivityCheckoutSessionResponse(session.getId(), url));
@@ -136,9 +137,8 @@ public class ActivityPaymentController {
     @PostMapping("/activity-reservations/finalize-checkout")
     @Transactional
     public ResponseEntity<?> finalizeCheckout(
-        @Valid @RequestBody FinalizeCheckoutRequest request,
-        Authentication authentication
-    ) {
+            @Valid @RequestBody FinalizeCheckoutRequest request,
+            Authentication authentication) {
         String effectiveStripeKey = resolveStripeApiKey();
         if (effectiveStripeKey == null || effectiveStripeKey.isBlank()) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body("Stripe is not configured");
@@ -165,7 +165,7 @@ public class ActivityPaymentController {
             }
 
             ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
 
             assertReservationOwner(reservation, authentication);
 
@@ -174,15 +174,15 @@ public class ActivityPaymentController {
                 reservationRepository.save(reservation);
 
                 Integer ownerId = reservation.getUser() != null ? reservation.getUser().getUserId() : null;
-                String activityName = reservation.getActivity() != null ? reservation.getActivity().getName() : "activity";
+                String activityName = reservation.getActivity() != null ? reservation.getActivity().getName()
+                        : "activity";
                 userNotificationService.notifyReservation(
-                    ownerId,
-                    "ACTIVITY",
-                    reservation.getActivityReservationId(),
-                    "Activity reservation confirmed",
-                    "Payment confirmed for \"" + activityName + "\".",
-                    "/mes-reservations"
-                );
+                        ownerId,
+                        "ACTIVITY",
+                        reservation.getActivityReservationId(),
+                        "Activity reservation confirmed",
+                        "Payment confirmed for \"" + activityName + "\".",
+                        "/mes-reservations");
             }
 
             ensureReceiptPdfUrl(reservation);
@@ -194,17 +194,17 @@ public class ActivityPaymentController {
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Could not finalize checkout: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Could not finalize checkout: " + ex.getMessage());
         }
     }
 
     @GetMapping("/activity-reservations/{reservationId}/qr")
     public ResponseEntity<byte[]> getReservationQr(
-        @PathVariable Integer reservationId,
-        Authentication authentication
-    ) {
+            @PathVariable Integer reservationId,
+            Authentication authentication) {
         ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
 
         assertReservationOwner(reservation, authentication);
         assertConfirmedReservation(reservation);
@@ -213,19 +213,18 @@ public class ActivityPaymentController {
         byte[] qr = qrCodeService.generateQrPng(content, 320);
 
         return ResponseEntity.ok()
-            .contentType(MediaType.IMAGE_PNG)
-            .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, max-age=0")
-            .header("Pragma", "no-cache")
-            .body(qr);
+                .contentType(MediaType.IMAGE_PNG)
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, max-age=0")
+                .header("Pragma", "no-cache")
+                .body(qr);
     }
 
     @GetMapping("/activity-reservations/{reservationId}/pdf")
     public ResponseEntity<byte[]> getReservationPdf(
-        @PathVariable Integer reservationId,
-        Authentication authentication
-    ) {
+            @PathVariable Integer reservationId,
+            Authentication authentication) {
         ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
 
         assertReservationOwner(reservation, authentication);
         assertConfirmedReservation(reservation);
@@ -235,115 +234,115 @@ public class ActivityPaymentController {
         String filename = "activity-receipt-ACT-" + reservation.getActivityReservationId() + ".pdf";
 
         return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_PDF)
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-            .body(pdf);
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .body(pdf);
     }
 
     @GetMapping("/activity-receipts/{reservationId}/pdf")
     public ResponseEntity<byte[]> viewReservationPdfByQr(
-        @PathVariable Integer reservationId,
-        @RequestParam(name = "sig", required = false) String signature
-    ) {
+            @PathVariable Integer reservationId,
+            @RequestParam(name = "sig", required = false) String signature) {
         if (!activityReceiptLinkService.isValidSignature(reservationId, signature)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid receipt link signature");
         }
 
         ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
-            .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
 
         assertConfirmedReservation(reservation);
 
         byte[] pdf = activityReceiptPdfService.generateReceiptPdf(reservation);
         return ResponseEntity.ok()
-            .contentType(MediaType.APPLICATION_PDF)
-            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"yallatn-activity-confirmation.pdf\"")
-            .body(pdf);
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"yallatn-activity-confirmation.pdf\"")
+                .body(pdf);
     }
 
-        @GetMapping(value = "/activity-receipts/{reservationId}", produces = MediaType.TEXT_HTML_VALUE)
-        public ResponseEntity<String> viewReceiptLandingByQr(
-                @PathVariable Integer reservationId,
-                @RequestParam(name = "sig", required = false) String signature
-        ) {
-                if (!activityReceiptLinkService.isValidSignature(reservationId, signature)) {
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid receipt link signature");
-                }
-
-                ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
-                assertConfirmedReservation(reservation);
-
-                String activityName = reservation.getActivity() != null ? reservation.getActivity().getName() : "Activity";
-                String cityName = reservation.getActivity() != null && reservation.getActivity().getCity() != null
-                        ? reservation.getActivity().getCity().getName()
-                        : "Tunisia";
-                String address = reservation.getActivity() != null && reservation.getActivity().getAddress() != null
-                    ? reservation.getActivity().getAddress()
-                    : "N/A";
-
-                String imageUrl = reservation.getActivity() == null
-                        ? null
-                        : activityMediaRepository.findByActivityActivityIdOrderByMediaIdDesc(reservation.getActivity().getActivityId())
-                                .stream()
-                                .map(ActivityMedia::getUrl)
-                                .filter(url -> url != null && !url.isBlank())
-                                .findFirst()
-                                .orElse(null);
-
-                String downloadUrl = ensureReceiptPdfUrl(reservation);
-                String imageBlock = (imageUrl != null)
-                        ? "<img class=\"hero\" src=\"" + esc(imageUrl) + "\" alt=\"Activity image\"/>"
-                        : "<div class=\"hero-fallback\">" + esc(activityName) + "</div>";
-
-                String html = """
-                        <!doctype html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="utf-8" />
-                            <meta name="viewport" content="width=device-width, initial-scale=1" />
-                            <title>YallaTN Activity Receipt</title>
-                            <style>
-                                body { margin:0; font-family: Helvetica, Arial, sans-serif; background:#eef3f8; color:#1f2a37; }
-                                .wrap { max-width: 680px; margin: 0 auto; padding: 20px 14px; }
-                                .card { background:#fff; border-radius: 18px; overflow:hidden; border:1px solid #d4e0ec; }
-                                .head { background: linear-gradient(135deg, #113b57 0%, #16607e 55%, #1b7596 100%); color:#fff; padding:16px 18px; }
-                                .head h1 { margin:0; font-size:20px; }
-                                .sub { margin-top:6px; opacity:.95; font-size:12px; color:#eaf4fc; }
-                                .hero { width:100%%; height:220px; display:block; object-fit:cover; border-bottom:1px solid #dbe6f0; }
-                                .hero-fallback { height:220px; background:#1b4965; color:#fff; font-weight:700; text-align:center; line-height:220px; }
-                                .body { padding:18px 20px 20px; }
-                                .badge { background:#fff2f5; border:1px solid #ffc8d4; padding:9px 10px; margin:0 0 14px; border-radius:10px; text-align:center; color:#c51f47; font-weight:700; }
-                                .meta { margin:0 0 14px; font-size:14px; line-height:1.6; }
-                                .meta strong { color:#0f2f45; }
-                                .btn { display:inline-block; background:#f12545; color:#fff; text-decoration:none; padding:12px 16px; border-radius:10px; font-weight:700; }
-                                .foot { background:#f8fafc; border-top:1px solid #dbe6f0; color:#56718b; font-size:11px; text-align:center; padding:10px; }
-                            </style>
-                        </head>
-                        <body>
-                            <div class="wrap">
-                                <div class="card">
-                                    <div class="head">
-                                        <h1>YallaTN+ Payment Receipt</h1>
-                                        <div class="sub">Scan successful. You are viewing the HTML receipt page.</div>
-                                    </div>
-                                    %s
-                                    <div class="body">
-                                        <div class="badge">Payment confirmed</div>
-                                        <p class="meta"><strong>Activity:</strong> %s<br/><strong>City:</strong> %s<br/><strong>Address:</strong> %s</p>
-                                        <a class="btn" href="%s">Open / Download PDF</a>
-                                    </div>
-                                    <div class="foot">YallaTN+ | Tunisia travel experiences</div>
-                                </div>
-                            </div>
-                        </body>
-                        </html>
-                        """.formatted(imageBlock, esc(activityName), esc(cityName), esc(address), esc(downloadUrl));
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.TEXT_HTML)
-                        .body(html);
+    @GetMapping(value = "/activity-receipts/{reservationId}", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> viewReceiptLandingByQr(
+            @PathVariable Integer reservationId,
+            @RequestParam(name = "sig", required = false) String signature) {
+        if (!activityReceiptLinkService.isValidSignature(reservationId, signature)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid receipt link signature");
         }
+
+        ActivityReservation reservation = reservationRepository.findByIdWithAssociations(reservationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Activity reservation not found"));
+        assertConfirmedReservation(reservation);
+
+        String activityName = reservation.getActivity() != null ? reservation.getActivity().getName() : "Activity";
+        String cityName = reservation.getActivity() != null && reservation.getActivity().getCity() != null
+                ? reservation.getActivity().getCity().getName()
+                : "Tunisia";
+        String address = reservation.getActivity() != null && reservation.getActivity().getAddress() != null
+                ? reservation.getActivity().getAddress()
+                : "N/A";
+
+        String imageUrl = reservation.getActivity() == null
+                ? null
+                : activityMediaRepository
+                        .findByActivityActivityIdOrderByMediaIdDesc(reservation.getActivity().getActivityId())
+                        .stream()
+                        .map(ActivityMedia::getUrl)
+                        .filter(url -> url != null && !url.isBlank())
+                        .findFirst()
+                        .orElse(null);
+
+        String downloadUrl = ensureReceiptPdfUrl(reservation);
+        String imageBlock = (imageUrl != null)
+                ? "<img class=\"hero\" src=\"" + esc(imageUrl) + "\" alt=\"Activity image\"/>"
+                : "<div class=\"hero-fallback\">" + esc(activityName) + "</div>";
+
+        String html = """
+                <!doctype html>
+                <html lang="en">
+                <head>
+                    <meta charset="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1" />
+                    <title>YallaTN Activity Receipt</title>
+                    <style>
+                        body { margin:0; font-family: Helvetica, Arial, sans-serif; background:#eef3f8; color:#1f2a37; }
+                        .wrap { max-width: 680px; margin: 0 auto; padding: 20px 14px; }
+                        .card { background:#fff; border-radius: 18px; overflow:hidden; border:1px solid #d4e0ec; }
+                        .head { background: linear-gradient(135deg, #113b57 0%, #16607e 55%, #1b7596 100%); color:#fff; padding:16px 18px; }
+                        .head h1 { margin:0; font-size:20px; }
+                        .sub { margin-top:6px; opacity:.95; font-size:12px; color:#eaf4fc; }
+                        .hero { width:100%%; height:220px; display:block; object-fit:cover; border-bottom:1px solid #dbe6f0; }
+                        .hero-fallback { height:220px; background:#1b4965; color:#fff; font-weight:700; text-align:center; line-height:220px; }
+                        .body { padding:18px 20px 20px; }
+                        .badge { background:#fff2f5; border:1px solid #ffc8d4; padding:9px 10px; margin:0 0 14px; border-radius:10px; text-align:center; color:#c51f47; font-weight:700; }
+                        .meta { margin:0 0 14px; font-size:14px; line-height:1.6; }
+                        .meta strong { color:#0f2f45; }
+                        .btn { display:inline-block; background:#f12545; color:#fff; text-decoration:none; padding:12px 16px; border-radius:10px; font-weight:700; }
+                        .foot { background:#f8fafc; border-top:1px solid #dbe6f0; color:#56718b; font-size:11px; text-align:center; padding:10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrap">
+                        <div class="card">
+                            <div class="head">
+                                <h1>YallaTN+ Payment Receipt</h1>
+                                <div class="sub">Scan successful. You are viewing the HTML receipt page.</div>
+                            </div>
+                            %s
+                            <div class="body">
+                                <div class="badge">Payment confirmed</div>
+                                <p class="meta"><strong>Activity:</strong> %s<br/><strong>City:</strong> %s<br/><strong>Address:</strong> %s</p>
+                                <a class="btn" href="%s">Open / Download PDF</a>
+                            </div>
+                            <div class="foot">YallaTN+ | Tunisia travel experiences</div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+                .formatted(imageBlock, esc(activityName), esc(cityName), esc(address), esc(downloadUrl));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_HTML)
+                .body(html);
+    }
 
     private void assertReservationOwner(ActivityReservation reservation, Authentication authentication) {
         Integer currentUserId = userIdentityResolver.resolveUserId(authentication);
@@ -359,12 +358,13 @@ public class ActivityPaymentController {
 
     private void assertConfirmedReservation(ActivityReservation reservation) {
         if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Receipt is available only for confirmed reservations");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Receipt is available only for confirmed reservations");
         }
     }
 
     private String normalizeFrontendBase() {
-        String base = frontendBaseUrl == null ? "http://localhost:4200" : frontendBaseUrl.trim();
+        String base = frontendBaseUrl == null ? "http://localhost:4200" : frontendBaseUrl.split(",")[0].trim();
         return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }
 
@@ -391,8 +391,8 @@ public class ActivityPaymentController {
             return false;
         }
         return !"disabled".equalsIgnoreCase(normalized)
-            && !"changeme".equalsIgnoreCase(normalized)
-            && !"change-me".equalsIgnoreCase(normalized);
+                && !"changeme".equalsIgnoreCase(normalized)
+                && !"change-me".equalsIgnoreCase(normalized);
     }
 
     private String esc(String value) {
@@ -400,11 +400,11 @@ public class ActivityPaymentController {
             return "";
         }
         return value
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("\"", "&quot;")
-            .replace("'", "&#39;");
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 
     private String ensureReceiptPdfUrl(ActivityReservation reservation) {
@@ -429,8 +429,8 @@ public class ActivityPaymentController {
         }
         String lower = value.trim().toLowerCase();
         return (lower.startsWith("https://") || lower.startsWith("http://"))
-            && lower.contains("/api/public/activity-receipts/")
-            && lower.contains("/pdf")
-            && lower.contains("?sig=");
+                && lower.contains("/api/public/activity-receipts/")
+                && lower.contains("/pdf")
+                && lower.contains("?sig=");
     }
 }

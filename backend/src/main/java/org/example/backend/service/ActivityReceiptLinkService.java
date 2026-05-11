@@ -23,7 +23,7 @@ public class ActivityReceiptLinkService {
     @Value("${app.backend.base-url:http://localhost:9091}")
     private String backendBaseUrl;
 
-    @Value("${app.frontend.base-url:http://localhost:4200}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String publicBaseUrl;
 
     private final CloudflaredTunnelService cloudflaredTunnelService;
@@ -35,19 +35,19 @@ public class ActivityReceiptLinkService {
     public String buildPublicPdfUrl(Integer reservationId) {
         String sig = signReservation(reservationId);
         return resolvePublicBaseUrl()
-            + "/api/public/activity-receipts/"
-            + reservationId
-            + "/pdf?sig="
-            + sig;
+                + "/api/public/activity-receipts/"
+                + reservationId
+                + "/pdf?sig="
+                + sig;
     }
 
     public String buildPublicReceiptUrl(Integer reservationId) {
         String sig = signReservation(reservationId);
         return resolvePublicBaseUrl()
-            + "/api/public/activity-receipts/"
-            + reservationId
-            + "?sig="
-            + sig;
+                + "/api/public/activity-receipts/"
+                + reservationId
+                + "?sig="
+                + sig;
     }
 
     public boolean isValidSignature(Integer reservationId, String signature) {
@@ -134,7 +134,7 @@ public class ActivityReceiptLinkService {
         }
         String lower = baseUrl.toLowerCase();
         return lower.contains("localhost")
-            || lower.contains("127.0.0.1")
-            || lower.contains("0.0.0.0");
+                || lower.contains("127.0.0.1")
+                || lower.contains("0.0.0.0");
     }
 }

@@ -115,7 +115,7 @@
             >
               <div class="artisan-card__status" [attr.data-status]="p.status">{{ getStatusLabel(p.status) }}</div>
               <div class="artisan-card__media">
-                <img *ngIf="showCatalogImage(p)" [src]="catalogImageUrl(p.imageUrl!)" [alt]="p.name"
+                <img *ngIf="showCatalogImage(p)" [src]="catalogImageUrl(p.imageUrl || getGalleryImages(p)[0]?.url)" [alt]="p.name"
                   (error)="onCatalogImageError(p.productId)" class="artisan-card__img" />
                 <div *ngIf="!showCatalogImage(p)" class="artisan-card__placeholder">
                   <span>✦</span>
@@ -169,7 +169,7 @@
                 <i class="pi" [class.pi-heart-fill]="p.isFavorite" [class.pi-heart]="!p.isFavorite"></i>
               </button>
               <div class="product-card__media">
-                <img *ngIf="showCatalogImage(p)" [src]="catalogImageUrl(p.imageUrl!)" [alt]="p.name"
+                <img *ngIf="showCatalogImage(p)" [src]="catalogImageUrl(p.imageUrl || getGalleryImages(p)[0]?.url)" [alt]="p.name"
                   (error)="onCatalogImageError(p.productId)" class="product-card__img" />
                 <div *ngIf="!showCatalogImage(p)" class="product-card__placeholder">
                   <span class="product-card__placeholder-icon">✦</span>

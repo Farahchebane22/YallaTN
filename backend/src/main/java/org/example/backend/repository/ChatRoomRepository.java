@@ -25,4 +25,4 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
             """)
     Optional<ChatRoom> findChatRoomBetweenUsers(@Param("userId1") Integer userId1,
                                                  @Param("userId2") Integer userId2);
-}
+}

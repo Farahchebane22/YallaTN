@@ -56,9 +56,13 @@ public class TwilioWhatsAppService {
             log.warn("Twilio enabled but whatsapp-from is blank; Twilio.init skipped");
             return;
         }
-        Twilio.init(accountSid.trim(), authToken.trim());
-        initialized = true;
-        log.info("Twilio initialized");
+        try {
+            Twilio.init(accountSid.trim(), authToken.trim());
+            initialized = true;
+            log.info("Twilio initialized");
+        } catch (Exception e) {
+            log.error("Failed to initialize Twilio: {}", e.getMessage());
+        }
     }
 
     public void sendWhatsApp(String toPhone, String message) {

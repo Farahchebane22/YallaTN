@@ -39,7 +39,7 @@ import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
 public class EventController {
     private final EventService eventService;
     private final EventReservationRepository reservationRepository;
@@ -54,7 +54,7 @@ public class EventController {
     private final UserNotificationService userNotificationService;
     private final PaymentService paymentService;
 
-    @Value("${app.frontend.base-url:http://localhost:4200}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${stripe.checkout.currency:usd}")
@@ -78,8 +78,7 @@ public class EventController {
             HuggingFacePosterService huggingFacePosterService,
             ImgBbService imgBbService,
             UserNotificationService userNotificationService,
-            PaymentService paymentService
-    ) {
+            PaymentService paymentService) {
         this.eventService = eventService;
         this.reservationRepository = reservationRepository;
         this.reservationItemRepository = reservationItemRepository;
@@ -95,10 +94,9 @@ public class EventController {
     }
 
     private String normalizeFrontendBase() {
-        String base = frontendBaseUrl == null ? "http://localhost:4200" : frontendBaseUrl.trim();
+        String base = frontendBaseUrl == null ? "http://localhost:4200" : frontendBaseUrl.split(",")[0].trim();
         return base.endsWith("/") ? base.substring(0, base.length() - 1) : base;
     }
-
 
     // --- GET ---
     @GetMapping
@@ -132,7 +130,8 @@ public class EventController {
             Event savedEvent = eventService.createOrUpdateEvent(event);
             return ResponseEntity.ok(savedEvent);
         } catch (Exception e) {
-            // Cela te permettra de voir l'erreur réelle dans les logs de ton IDE (IntelliJ/Eclipse)
+            // Cela te permettra de voir l'erreur réelle dans les logs de ton IDE
+            // (IntelliJ/Eclipse)
             e.printStackTrace();
             return ResponseEntity.status(500).body("Backend Error: " + e.getMessage());
         }
@@ -149,10 +148,11 @@ public class EventController {
             event.setStatus(eventDetails.getStatus());
             event.setImageUrl(eventDetails.getImageUrl());
             event.setPrice(eventDetails.getPrice()); // Mise à jour du prix
-            event.setTotalCapacity(Math.max(0, eventDetails.getTotalCapacity() == null ? 0 : eventDetails.getTotalCapacity()));
+            event.setTotalCapacity(
+                    Math.max(0, eventDetails.getTotalCapacity() == null ? 0 : eventDetails.getTotalCapacity()));
 
             // Gestion de la ville pour l'update
-            if(eventDetails.getCity() != null) {
+            if (eventDetails.getCity() != null) {
                 event.setCity(eventDetails.getCity());
             }
 
@@ -160,14 +160,11 @@ public class EventController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-        @PostMapping(
-            value = {"/extract-from-image", "/extract-from-image/", "/admin/extract-from-image", "/admin/extract-from-image/"},
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
-        )
+    @PostMapping(value = { "/extract-from-image", "/extract-from-image/", "/admin/extract-from-image",
+            "/admin/extract-from-image/" }, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> extractFromImage(
             @RequestParam("file") MultipartFile file,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         requireAdmin(authentication);
         if (file == null || file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Image file is required", "text", ""));
@@ -187,11 +184,10 @@ public class EventController {
         }
     }
 
-    @PostMapping({"/admin/generate-poster", "/admin/generate-poster/", "/generate-poster", "/generate-poster/"})
+    @PostMapping({ "/admin/generate-poster", "/admin/generate-poster/", "/generate-poster", "/generate-poster/" })
     public ResponseEntity<?> generatePoster(
             @RequestBody Map<String, Object> payload,
-            Authentication authentication
-    ) {
+            Authentication authentication) {
         requireAdmin(authentication);
 
         String title = String.valueOf(payload.getOrDefault("title", "")).trim();
@@ -201,8 +197,7 @@ public class EventController {
 
         if (title.isBlank() || city.isBlank() || category.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of(
-                    "message", "title, city and category are required"
-            ));
+                    "message", "title, city and category are required"));
         }
 
         try {
@@ -212,8 +207,7 @@ public class EventController {
 
             return ResponseEntity.ok(Map.of(
                     "prompt", prompt,
-                    "imageUrl", uploadedUrl
-            ));
+                    "imageUrl", uploadedUrl));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage()));
         } catch (IllegalStateException ex) {
@@ -289,8 +283,10 @@ public class EventController {
                 return ResponseEntity.badRequest().body("event_id is required");
             }
             Integer requestedTicketTypeId = parseInteger(data.get("ticket_type_id"));
-            int requestedTickets = parsePositiveInt(data.get("requestedTickets"), parsePositiveInt(data.get("quantity"), 1));
-            List<ParticipantInput> participants = normalizeParticipants(data.get("participants"), requestedTickets, currentUser);
+            int requestedTickets = parsePositiveInt(data.get("requestedTickets"),
+                    parsePositiveInt(data.get("quantity"), 1));
+            List<ParticipantInput> participants = normalizeParticipants(data.get("participants"), requestedTickets,
+                    currentUser);
             if (amount == null) {
                 amount = 0d;
             }
@@ -304,11 +300,11 @@ public class EventController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Sold Out");
             }
 
-                User userRef = new User();
-                userRef.setUserId(currentUserId);
+            User userRef = new User();
+            userRef.setUserId(currentUserId);
 
             res.setEvent(event);
-                res.setUser(userRef);
+            res.setUser(userRef);
             res.setTotalAmount(amount);
             res.setStatus(ReservationStatus.CONFIRMED);
 
@@ -321,8 +317,7 @@ public class EventController {
                         res.getEventReservationId(),
                         "Event reservation created",
                         "Your reservation for \"" + event.getTitle() + "\" was created.",
-                        "/evenements"
-                );
+                        "/evenements");
             }
 
             TicketType ticketType = resolveTicketTypeForCheckout(event, requestedTicketTypeId);
@@ -355,8 +350,7 @@ public class EventController {
                             event.getVenue(),
                             event.getStartDate(),
                             qrTokens,
-                                participantLabels
-                    );
+                            participantLabels);
                     emailSent = true;
                 }
             } catch (Exception ex) {
@@ -367,8 +361,7 @@ public class EventController {
                                 currentUser.getFirstName(),
                                 event.getTitle(),
                                 event.getStartDate(),
-                                event.getVenue()
-                        );
+                                event.getVenue());
                         emailSent = true;
                     }
                 } catch (Exception fallbackEx) {
@@ -378,13 +371,12 @@ public class EventController {
                 }
             }
 
-                    if (!emailSent) {
-                    return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+            if (!emailSent) {
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                         "message", "Registration created, but confirmation email failed.",
                         "emailSent", false,
-                        "emailError", emailError.isBlank() ? "Email provider error" : emailError
-                    ));
-                    }
+                        "emailError", emailError.isBlank() ? "Email provider error" : emailError));
+            }
 
             return ResponseEntity.ok(Map.of(
                     "message", "Reservation linked successfully.",
@@ -393,8 +385,7 @@ public class EventController {
                     "quantity", requestedTickets,
                     "qrCodeTokens", qrTokens,
                     "emailSent", emailSent,
-                    "emailError", emailError
-            ));
+                    "emailError", emailError));
         } catch (Exception e) {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResponseEntity.status(500).body("Erreur : " + e.getMessage());
@@ -422,7 +413,8 @@ public class EventController {
             }
 
             Integer requestedTicketTypeId = parseInteger(data.get("ticket_type_id"));
-            int requestedTickets = parsePositiveInt(data.get("requestedTickets"), parsePositiveInt(data.get("quantity"), 1));
+            int requestedTickets = parsePositiveInt(data.get("requestedTickets"),
+                    parsePositiveInt(data.get("quantity"), 1));
 
             Event e = eventService.getEventById(eventId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Event not found"));
@@ -433,7 +425,8 @@ public class EventController {
 
             Double dbPrice = e.getPrice() != null ? e.getPrice() : 0d;
             if (dbPrice <= 0) {
-                return ResponseEntity.badRequest().body("This event has no paid ticket. Use the free reservation flow.");
+                return ResponseEntity.badRequest()
+                        .body("This event has no paid ticket. Use the free reservation flow.");
             }
 
             TicketType ticketType = resolveTicketTypeForCheckout(e, requestedTicketTypeId);
@@ -459,10 +452,9 @@ public class EventController {
             String currency = stripeCheckoutCurrency == null || stripeCheckoutCurrency.isBlank()
                     ? "usd"
                     : stripeCheckoutCurrency.trim().toLowerCase();
-            long unitAmountMinor =
-                    "tnd".equals(currency)
-                        ? Math.round(ticketPrice * 100.0)
-                        : Math.round(ticketPrice * stripeTndToPresentment * 100.0);
+            long unitAmountMinor = "tnd".equals(currency)
+                    ? Math.round(ticketPrice * 100.0)
+                    : Math.round(ticketPrice * stripeTndToPresentment * 100.0);
             if (unitAmountMinor < 1) {
                 return ResponseEntity.badRequest().body("amount too small for Stripe");
             }
@@ -485,7 +477,7 @@ public class EventController {
                     .setSuccessUrl(base + "/success?session_id={CHECKOUT_SESSION_ID}")
                     .setCancelUrl(base + "/evenements")
                     .addLineItem(SessionCreateParams.LineItem.builder()
-                        .setQuantity((long) requestedTickets)
+                            .setQuantity((long) requestedTickets)
                             .setPriceData(SessionCreateParams.LineItem.PriceData.builder()
                                     .setCurrency(currency)
                                     .setUnitAmount(unitAmountMinor)
@@ -504,32 +496,31 @@ public class EventController {
                     long eurUnitMinor = paymentService.stripeMinorUnits(ticketPrice, "eur");
                     long eurTotalMinor = eurUnitMinor * (long) requestedTickets;
                     paymentService.assertTransportStripeChargeable(eurTotalMinor, "eur");
-                    SessionCreateParams paramsEur =
-                            SessionCreateParams.builder()
-                                    .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
-                                    .setMode(SessionCreateParams.Mode.PAYMENT)
-                                    .setClientReferenceId(String.valueOf(res.getEventReservationId()))
-                                    .putMetadata("reservationId", String.valueOf(res.getEventReservationId()))
-                                    .putMetadata("eventId", String.valueOf(eventId))
-                                    .putMetadata("ticketTypeId", String.valueOf(ticketType.getTicketTypeId()))
+                    SessionCreateParams paramsEur = SessionCreateParams.builder()
+                            .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                            .setMode(SessionCreateParams.Mode.PAYMENT)
+                            .setClientReferenceId(String.valueOf(res.getEventReservationId()))
+                            .putMetadata("reservationId", String.valueOf(res.getEventReservationId()))
+                            .putMetadata("eventId", String.valueOf(eventId))
+                            .putMetadata("ticketTypeId", String.valueOf(ticketType.getTicketTypeId()))
                             .putMetadata("quantity", String.valueOf(requestedTickets))
-                                    .setSuccessUrl(base + "/success?session_id={CHECKOUT_SESSION_ID}")
-                                    .setCancelUrl(base + "/evenements")
-                                    .addLineItem(
-                                            SessionCreateParams.LineItem.builder()
-                                    .setQuantity((long) requestedTickets)
-                                                    .setPriceData(
-                                                            SessionCreateParams.LineItem.PriceData.builder()
-                                                                    .setCurrency("eur")
-                                                                    .setUnitAmount(eurUnitMinor)
-                                                                    .setProductData(
-                                                                            SessionCreateParams.LineItem.PriceData
-                                                                                    .ProductData.builder()
-                                                                                    .setName("Event: " + productName)
-                                                                                    .build())
-                                                                    .build())
-                                                    .build())
-                                    .build();
+                            .setSuccessUrl(base + "/success?session_id={CHECKOUT_SESSION_ID}")
+                            .setCancelUrl(base + "/evenements")
+                            .addLineItem(
+                                    SessionCreateParams.LineItem.builder()
+                                            .setQuantity((long) requestedTickets)
+                                            .setPriceData(
+                                                    SessionCreateParams.LineItem.PriceData.builder()
+                                                            .setCurrency("eur")
+                                                            .setUnitAmount(eurUnitMinor)
+                                                            .setProductData(
+                                                                    SessionCreateParams.LineItem.PriceData.ProductData
+                                                                            .builder()
+                                                                            .setName("Event: " + productName)
+                                                                            .build())
+                                                            .build())
+                                            .build())
+                            .build();
                     session = Session.create(paramsEur);
                 } else {
                     throw exCreate;
@@ -542,8 +533,7 @@ public class EventController {
 
             return ResponseEntity.ok(Map.of(
                     "sessionId", session.getId(),
-                    "sessionUrl", url
-            ));
+                    "sessionUrl", url));
         } catch (StripeException e) {
             return ResponseEntity.status(500).body("Online payment is temporarily unavailable.");
         } catch (ResponseStatusException e) {
@@ -554,7 +544,8 @@ public class EventController {
     }
 
     /**
-     * After Stripe redirects back with {@code session_id}, confirms payment and marks the reservation CONFIRMED.
+     * After Stripe redirects back with {@code session_id}, confirms payment and
+     * marks the reservation CONFIRMED.
      */
     @PostMapping("/finalize-checkout")
     @Transactional
@@ -603,8 +594,7 @@ public class EventController {
                 return ResponseEntity.ok(Map.of(
                         "message", "Reservation already confirmed",
                         "eventReservationId", res.getEventReservationId(),
-                        "eventId", res.getEvent() != null ? res.getEvent().getEventId() : null
-                ));
+                        "eventId", res.getEvent() != null ? res.getEvent().getEventId() : null));
             }
 
             Integer ticketTypeId = metadataInt(session, "ticketTypeId");
@@ -616,7 +606,8 @@ public class EventController {
             TicketType ticketType = ticketTypeRepository.findById(ticketTypeId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ticket type not found"));
 
-            List<ParticipantInput> participants = normalizeParticipants(body != null ? body.get("participants") : null, requestedTickets, current);
+            List<ParticipantInput> participants = normalizeParticipants(body != null ? body.get("participants") : null,
+                    requestedTickets, current);
 
             Integer eventId = res.getEvent() != null ? res.getEvent().getEventId() : null;
             try {
@@ -646,20 +637,19 @@ public class EventController {
             res.setStatus(ReservationStatus.CONFIRMED);
             reservationRepository.save(res);
 
-                Integer ownerId = res.getUser() != null ? res.getUser().getUserId() : null;
-                if (ownerId != null) {
+            Integer ownerId = res.getUser() != null ? res.getUser().getUserId() : null;
+            if (ownerId != null) {
                 String eventTitle = res.getEvent() != null && res.getEvent().getTitle() != null
-                    ? res.getEvent().getTitle()
-                    : "event";
+                        ? res.getEvent().getTitle()
+                        : "event";
                 userNotificationService.notifyReservation(
-                    ownerId,
-                    "EVENT",
-                    res.getEventReservationId(),
-                    "Event reservation confirmed",
-                    "Payment confirmed for \"" + eventTitle + "\".",
-                    "/evenements"
-                );
-                }
+                        ownerId,
+                        "EVENT",
+                        res.getEventReservationId(),
+                        "Event reservation confirmed",
+                        "Payment confirmed for \"" + eventTitle + "\".",
+                        "/evenements");
+            }
 
             boolean emailSent = false;
             String emailError = "";
@@ -672,13 +662,13 @@ public class EventController {
                             res.getEvent() != null ? res.getEvent().getVenue() : "TBA",
                             res.getEvent() != null ? res.getEvent().getStartDate() : null,
                             qrTokens,
-                                participantLabels
-                    );
-                            emailSent = true;
+                            participantLabels);
+                    emailSent = true;
                 }
-                        } catch (Exception ex) {
-                // Non-blocking: payment confirmation stays successful even if email sending fails.
-                        emailError = ex.getMessage() == null ? "Email provider error" : ex.getMessage();
+            } catch (Exception ex) {
+                // Non-blocking: payment confirmation stays successful even if email sending
+                // fails.
+                emailError = ex.getMessage() == null ? "Email provider error" : ex.getMessage();
             }
 
             return ResponseEntity.ok(Map.of(
@@ -686,96 +676,89 @@ public class EventController {
                     "eventReservationId", res.getEventReservationId(),
                     "eventId", res.getEvent() != null ? res.getEvent().getEventId() : null,
                     "ticketTypeId", ticketTypeId,
-                        "quantity", requestedTickets,
-                            "qrCodeTokens", qrTokens,
-                            "emailSent", emailSent,
-                            "emailError", emailError
-            ));
+                    "quantity", requestedTickets,
+                    "qrCodeTokens", qrTokens,
+                    "emailSent", emailSent,
+                    "emailError", emailError));
         } catch (StripeException e) {
             return ResponseEntity.status(500).body("Online payment is temporarily unavailable.");
         }
     }
 
-                    @GetMapping("/admin/tickets")
-                    @Transactional(readOnly = true)
-                    public ResponseEntity<?> listGeneratedTickets(
-                        @RequestParam(value = "search", required = false) String search,
-                        @RequestParam(value = "date", required = false) String date,
-                        @RequestParam(value = "scanned", required = false) Boolean scanned,
-                        Authentication authentication
-                    ) {
-                    requireAdmin(authentication);
+    @GetMapping("/admin/tickets")
+    @Transactional(readOnly = true)
+    public ResponseEntity<?> listGeneratedTickets(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "date", required = false) String date,
+            @RequestParam(value = "scanned", required = false) Boolean scanned,
+            Authentication authentication) {
+        requireAdmin(authentication);
 
-                    LocalDate dateFilter = parseDate(date);
-                    String searchLower = search == null ? "" : search.trim().toLowerCase();
+        LocalDate dateFilter = parseDate(date);
+        String searchLower = search == null ? "" : search.trim().toLowerCase();
 
-                    List<Map<String, Object>> rows = reservationItemRepository.findTop1000ByOrderByReservationItemIdDesc()
-                        .stream()
-                        .filter(item -> filterBySearch(item, searchLower))
-                        .filter(item -> filterByDate(item, dateFilter))
-                        .filter(item -> scanned == null || scanned.equals(Boolean.TRUE.equals(item.getIsScanned())))
-                        .map(this::toTicketRow)
-                        .toList();
+        List<Map<String, Object>> rows = reservationItemRepository.findTop1000ByOrderByReservationItemIdDesc()
+                .stream()
+                .filter(item -> filterBySearch(item, searchLower))
+                .filter(item -> filterByDate(item, dateFilter))
+                .filter(item -> scanned == null || scanned.equals(Boolean.TRUE.equals(item.getIsScanned())))
+                .map(this::toTicketRow)
+                .toList();
 
-                    Map<String, Object> response = new LinkedHashMap<>();
-                    response.put("count", rows.size());
-                    response.put("items", rows);
-                    return ResponseEntity.ok(response);
-                    }
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("count", rows.size());
+        response.put("items", rows);
+        return ResponseEntity.ok(response);
+    }
 
-                    @PostMapping("/admin/tickets/scan")
-                    @Transactional
-                    public ResponseEntity<?> scanTicket(@RequestBody Map<String, String> body, Authentication authentication) {
-                    requireAdmin(authentication);
+    @PostMapping("/admin/tickets/scan")
+    @Transactional
+    public ResponseEntity<?> scanTicket(@RequestBody Map<String, String> body, Authentication authentication) {
+        requireAdmin(authentication);
 
-                    String token = body != null ? body.get("token") : null;
-                    if (token == null || token.isBlank()) {
-                        return ResponseEntity.badRequest().body(Map.of(
-                            "found", false,
-                            "message", "QR token is required."
-                        ));
-                    }
+        String token = body != null ? body.get("token") : null;
+        if (token == null || token.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "found", false,
+                    "message", "QR token is required."));
+        }
 
-                    String normalizedToken = token.trim();
-                    EventReservationItem item = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
-                        .orElse(null);
-                    if (item == null) {
-                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
-                            "found", false,
-                            "message", "No ticket found for this QR code."
-                        ));
-                    }
+        String normalizedToken = token.trim();
+        EventReservationItem item = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
+                .orElse(null);
+        if (item == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "found", false,
+                    "message", "No ticket found for this QR code."));
+        }
 
-                    if (Boolean.TRUE.equals(item.getIsScanned())) {
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                            "found", true,
-                            "alreadyScanned", true,
-                            "message", "This ticket was already validated.",
-                            "ticket", toTicketRow(item)
-                        ));
-                    }
+        if (Boolean.TRUE.equals(item.getIsScanned())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "found", true,
+                    "alreadyScanned", true,
+                    "message", "This ticket was already validated.",
+                    "ticket", toTicketRow(item)));
+        }
 
-                    int updatedRows = reservationItemRepository.markAsScannedIfNotYet(item.getReservationItemId());
-                    if (updatedRows == 0) {
-                        EventReservationItem refreshed = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
-                            .orElse(item);
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                            "found", true,
-                            "alreadyScanned", true,
-                            "message", "This ticket was already validated.",
-                            "ticket", toTicketRow(refreshed)
-                        ));
-                    }
+        int updatedRows = reservationItemRepository.markAsScannedIfNotYet(item.getReservationItemId());
+        if (updatedRows == 0) {
+            EventReservationItem refreshed = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
+                    .orElse(item);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                    "found", true,
+                    "alreadyScanned", true,
+                    "message", "This ticket was already validated.",
+                    "ticket", toTicketRow(refreshed)));
+        }
 
-                    EventReservationItem refreshed = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
-                        .orElse(item);
-                    return ResponseEntity.ok(Map.of(
-                        "found", true,
-                        "alreadyScanned", false,
-                        "message", "Ticket validated successfully.",
-                        "ticket", toTicketRow(refreshed)
-                    ));
-                    }
+        EventReservationItem refreshed = reservationItemRepository.findDetailedByQrCodeToken(normalizedToken)
+                .orElse(item);
+        return ResponseEntity.ok(Map.of(
+                "found", true,
+                "alreadyScanned", false,
+                "message", "Ticket validated successfully.",
+                "ticket", toTicketRow(refreshed)));
+    }
 
     private User resolveAuthenticatedUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -800,8 +783,10 @@ public class EventController {
     }
 
     private static Integer parseInteger(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number number) return number.intValue();
+        if (value == null)
+            return null;
+        if (value instanceof Number number)
+            return number.intValue();
         try {
             return Integer.parseInt(value.toString());
         } catch (NumberFormatException ex) {
@@ -815,8 +800,8 @@ public class EventController {
                 .append("Event type: ").append(category).append(". ")
                 .append("Event name: ").append(title).append(". ")
                 .append("Location: ").append(city).append(", Tunisia. ")
-            .append("Dynamic composition, high resolution, modern style, clean space for UI overlay text. ")
-            .append("No typography, no words, no letters, no numbers, no watermark, no signature, no logo.");
+                .append("Dynamic composition, high resolution, modern style, clean space for UI overlay text. ")
+                .append("No typography, no words, no letters, no numbers, no watermark, no signature, no logo.");
 
         if (!description.isBlank() && !"null".equalsIgnoreCase(description)) {
             prompt.append(" Additional details: ").append(description).append('.');
@@ -831,8 +816,10 @@ public class EventController {
     }
 
     private static Double parseDouble(Object value) {
-        if (value == null) return null;
-        if (value instanceof Number number) return number.doubleValue();
+        if (value == null)
+            return null;
+        if (value instanceof Number number)
+            return number.doubleValue();
         try {
             return Double.parseDouble(value.toString());
         } catch (NumberFormatException ex) {
@@ -915,7 +902,8 @@ public class EventController {
 
         String username = user != null && user.getUsername() != null ? user.getUsername().toLowerCase() : "";
         String eventTitle = event != null && event.getTitle() != null ? event.getTitle().toLowerCase() : "";
-        String ticketName = type != null && type.getTicketNomevent() != null ? type.getTicketNomevent().toLowerCase() : "";
+        String ticketName = type != null && type.getTicketNomevent() != null ? type.getTicketNomevent().toLowerCase()
+                : "";
 
         return username.contains(searchLower)
                 || eventTitle.contains(searchLower)
@@ -995,7 +983,8 @@ public class EventController {
         return row;
     }
 
-    private List<ParticipantInput> normalizeParticipants(Object rawParticipants, int requestedTickets, User fallbackUser) {
+    private List<ParticipantInput> normalizeParticipants(Object rawParticipants, int requestedTickets,
+            User fallbackUser) {
         if (requestedTickets <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "requestedTickets must be positive");
         }
@@ -1009,7 +998,8 @@ public class EventController {
                 String firstName = safeName(mapEntry.get("firstName"));
                 String lastName = safeName(mapEntry.get("lastName"));
                 if (firstName.isBlank() || lastName.isBlank()) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each participant must have firstName and lastName");
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                            "Each participant must have firstName and lastName");
                 }
                 participants.add(new ParticipantInput(firstName, lastName));
             }
@@ -1017,7 +1007,8 @@ public class EventController {
 
         if (participants.size() != requestedTickets) {
             if (!participants.isEmpty()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "participants size must match requestedTickets");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "participants size must match requestedTickets");
             }
             String fallbackFirst = safeName(fallbackUser.getFirstName());
             String fallbackLast = safeName(fallbackUser.getLastName());

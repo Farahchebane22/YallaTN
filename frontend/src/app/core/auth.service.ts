@@ -23,11 +23,13 @@ import {
   CaptchaConfig,
 } from './auth.types';
 
+import { environment } from '../../environments/environment';
+
 const TOKEN_STORAGE_KEY = 'auth_token';
 const USER_STORAGE_KEY = 'auth_user';
 
 /** Browser redirect for OAuth2 must hit the backend directly; keep in sync with proxy.conf.json target port. */
-const OAUTH_BACKEND_ORIGIN = 'http://localhost:9091';
+const OAUTH_BACKEND_ORIGIN = (environment.apiUrl !== undefined && environment.apiUrl !== null) ? environment.apiUrl : 'http://localhost:9091';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

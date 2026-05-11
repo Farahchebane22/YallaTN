@@ -16,17 +16,14 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import java.util.Map;
 
 @Service
 public class StreamChatService {
@@ -42,8 +39,8 @@ public class StreamChatService {
     @Value("${app.stream.chat.base-url:https://chat.stream-io-api.com}")
     private String baseUrl;
 
-    @Value("${app.upload.dir:uploads}")
-    private String uploadRootDir;
+    @Autowired
+    private SwiftStorageService swiftStorageService;
 
     public StreamChatService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -110,23 +107,9 @@ public class StreamChatService {
 
     private String saveVoiceLocally(MultipartFile file) {
         try {
-            Path root = Paths.get(System.getProperty("user.dir"), uploadRootDir, "voice-messages");
-            Files.createDirectories(root);
-
-            String original = file.getOriginalFilename();
-            String safeOriginal = (original == null ? "voice.webm" : original)
-                    .replaceAll("[^a-zA-Z0-9._-]", "_");
-            if (safeOriginal.length() > 100) {
-                safeOriginal = safeOriginal.substring(safeOriginal.length() - 100);
-            }
-
-            String stored = UUID.randomUUID() + "_" + safeOriginal;
-            Path target = root.resolve(stored);
-            file.transferTo(target);
-
-            return "/uploads/voice-messages/" + stored;
+            return swiftStorageService.uploadFile(file);
         } catch (IOException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Voice upload failed");
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Voice upload failed in Swift");
         }
     }
 

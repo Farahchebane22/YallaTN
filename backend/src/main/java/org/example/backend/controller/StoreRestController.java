@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/store")
-@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
 public class StoreRestController {
 
     private final PointPackageRepository pointPackageRepository;
@@ -34,7 +34,7 @@ public class StoreRestController {
             GamificationPointsService gamificationPointsService,
             @Value("${stripe.api.key}") String stripeApiKey,
             @Value("${stripe.checkout.currency:usd}") String stripeCurrency,
-            @Value("${app.frontend.base-url:http://localhost:4200}") String frontendUrl) {
+            @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}") String frontendUrl) {
         this.pointPackageRepository = pointPackageRepository;
         this.gamificationPointsService = gamificationPointsService;
         this.stripeCurrency = stripeCurrency;
@@ -53,10 +53,10 @@ public class StoreRestController {
         if (packageId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "packageId required");
         }
-        
+
         PointPackage pkg = pointPackageRepository.findById(packageId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Package not found"));
-        
+
         if (!pkg.isActive()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Package is not active");
         }
@@ -98,20 +98,21 @@ public class StoreRestController {
 
         try {
             Session session = Session.retrieve(sessionId);
-            
+
             if ("paid".equals(session.getPaymentStatus())) {
                 String pIdStr = session.getMetadata().get("packageId");
                 String uIdStr = session.getMetadata().get("userId");
-                
+
                 if (pIdStr == null || uIdStr == null) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid metadata in session");
                 }
-                
-                // IMPORTANT: In a real app we need to track if we already rewarded this sessionId
-                // to prevent double rewarding on refresh. 
+
+                // IMPORTANT: In a real app we need to track if we already rewarded this
+                // sessionId
+                // to prevent double rewarding on refresh.
                 // For this request, we just add the points directly.
                 Long packageId = Long.parseLong(pIdStr);
-                
+
                 PointPackage pkg = pointPackageRepository.findById(packageId).orElse(null);
                 if (pkg != null) {
                     User user = currentUser();
@@ -119,9 +120,10 @@ public class StoreRestController {
                     if (!String.valueOf(user.getId()).equals(uIdStr)) {
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Session belongs to another user");
                     }
-                    
+
                     gamificationPointsService.addPoints(user, pkg.getPointsAmount());
-                    return ResponseEntity.ok(Map.of("success", true, "message", "Points added successfully", "addedPoints", pkg.getPointsAmount()));
+                    return ResponseEntity.ok(Map.of("success", true, "message", "Points added successfully",
+                            "addedPoints", pkg.getPointsAmount()));
                 }
             }
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Payment not completed"));

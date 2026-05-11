@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/translate")
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200}")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
 public class TranslationController {
 
     private final TranslationService translationService;
@@ -27,8 +27,7 @@ public class TranslationController {
             throws Exception {
         String text = request.getText() == null ? "" : request.getText();
         String out = translationService.translate(text, request.getSourceLang(), request.getTargetLang());
-        TranslateApiResponse res =
-                new TranslateApiResponse(out, request.getSourceLang(), request.getTargetLang());
+        TranslateApiResponse res = new TranslateApiResponse(out, request.getSourceLang(), request.getTargetLang());
         return ResponseEntity.ok(res);
     }
 }

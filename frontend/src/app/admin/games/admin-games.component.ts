@@ -685,7 +685,7 @@ export class AdminGamesComponent implements OnInit {
     formData.append('file', file);
     formData.append('subDir', 'audio');
 
-    this.http.post<any>('http://localhost:9091/api/public/uploads/audio', formData)
+    this.http.post<any>('/api/public/uploads/audio', formData)
       .subscribe({
         next: (res) => {
           if (type === 'vocal') {

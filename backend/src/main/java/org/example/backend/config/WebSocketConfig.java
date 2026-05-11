@@ -17,7 +17,7 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.cors.allowed-origins:http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
     private String allowedOrigins;
 
     @Autowired
@@ -32,7 +32,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Jamais de tableau vide (SockJS peut répondre 500). Dev : localhost / 127.0.0.1 sur tous ports.
+        // Jamais de tableau vide (SockJS peut répondre 500). Dev : localhost /
+        // 127.0.0.1 sur tous ports.
         List<String> patterns = new ArrayList<>();
         patterns.add("http://localhost:*");
         patterns.add("http://127.0.0.1:*");
@@ -48,7 +49,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns(patterns.toArray(new String[0]))
                 .withSockJS();
-        // Plain WebSocket for STOMP clients (e.g. tracking map); SockJS cannot share this path.
+        // Plain WebSocket for STOMP clients (e.g. tracking map); SockJS cannot share
+        // this path.
         registry.addEndpoint("/ws-native")
                 .setAllowedOrigins(origins);
     }
