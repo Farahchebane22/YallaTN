@@ -40,7 +40,7 @@ public class StreamChatService {
     private String baseUrl;
 
     @Autowired
-    private SwiftStorageService swiftStorageService;
+    private FileService fileService;
 
     public StreamChatService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -107,9 +107,9 @@ public class StreamChatService {
 
     private String saveVoiceLocally(MultipartFile file) {
         try {
-            return swiftStorageService.uploadFile(file);
-        } catch (IOException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Voice upload failed in Swift");
+            return fileService.storeFile(file, "chat-voice");
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Voice upload failed locally");
         }
     }
 

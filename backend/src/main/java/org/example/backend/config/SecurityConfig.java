@@ -143,10 +143,14 @@ public class SecurityConfig {
 
                                                 // SOCIAL FEATURES
                                                 .requestMatchers(
-                                                                "/post/**",
-                                                                "/comment/**",
-                                                                "/like/**",
-                                                                "/story/**")
+                                                                "/api/post/**",
+                                                                "/api/comment/**",
+                                                                "/api/like/**",
+                                                                "/api/story/**",
+                                                                "/api/chatroom/**",
+                                                                "/api/follow/**",
+                                                                "/api/saved-post/**",
+                                                                "/api/media/**")
                                                 .authenticated()
 
                                                 // EVERYTHING UNDER /api REQUIRES AUTH

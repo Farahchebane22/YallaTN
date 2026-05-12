@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/post")
+@RequestMapping("/api/post")
 public class PostController {
 
     @Autowired

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/like")
+@RequestMapping("/api/like")
 @Slf4j
 public class LikeController {
 

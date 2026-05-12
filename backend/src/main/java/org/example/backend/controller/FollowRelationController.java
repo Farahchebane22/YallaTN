@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/follow")
+@RequestMapping("/api/follow")
 public class FollowRelationController {
 
     private final FollowRelationService followRelationService;

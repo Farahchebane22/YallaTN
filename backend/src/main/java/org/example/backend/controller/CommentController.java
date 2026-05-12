@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 @RestController
-@RequestMapping("/comment")
+@RequestMapping("/api/comment")
 public class CommentController {
 
     @Autowired

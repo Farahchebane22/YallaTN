@@ -21,11 +21,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import org.example.backend.model.Post;
 import org.example.backend.service.GeminiCommunityImageTaggingService;
-import org.example.backend.service.SwiftStorageService;
+import org.example.backend.service.ImgBbService;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/media")
+@RequestMapping("/api/media")
 public class PostMediaController {
 
     @Autowired
@@ -38,7 +38,7 @@ public class PostMediaController {
     GeminiCommunityImageTaggingService geminiCommunityImageTaggingService;
 
     @Autowired
-    SwiftStorageService swiftStorageService;
+    ImgBbService imgBbService;
 
     @GetMapping("/allMedias")
     public List<PostMedia> getAllMedia() {
@@ -109,7 +109,7 @@ public class PostMediaController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "api.error.post_media_owner_only");
         }
 
-        String fileUrl = swiftStorageService.uploadFile(file);
+        String fileUrl = imgBbService.uploadImage(file);
 
         PostMedia media = new PostMedia();
         media.setPost(post);

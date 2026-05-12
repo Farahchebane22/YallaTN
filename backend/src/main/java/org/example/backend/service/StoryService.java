@@ -27,7 +27,7 @@ public class StoryService implements IStoryService {
     private final UserRepository userRepository;
 
     @Autowired
-    private SwiftStorageService swiftStorageService;
+    private ImgBbService imgBbService;
 
     public StoryService(
             StoryRepository storyRepository,
@@ -280,9 +280,9 @@ public class StoryService implements IStoryService {
 
     private String storeStoryFile(MultipartFile file) {
         try {
-            return swiftStorageService.uploadFile(file);
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store story media in Swift");
+            return imgBbService.uploadImage(file);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to store story media in ImgBB");
         }
     }
 

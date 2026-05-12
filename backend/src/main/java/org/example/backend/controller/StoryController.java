@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/story")
+@RequestMapping("/api/story")
 public class StoryController {
 
     private final IStoryService storyService;

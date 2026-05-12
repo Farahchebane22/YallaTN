@@ -22,7 +22,7 @@ public class PuzzleImageService {
     public static final Path PUZZLE_UPLOAD_DIR = Paths.get("uploads", "puzzles");
 
     @Autowired
-    private SwiftStorageService swiftStorageService;
+    private ImgBbService imgBbService;
 
     private final PuzzleImageRepository puzzleRepo;
 
@@ -53,7 +53,7 @@ public class PuzzleImageService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         try {
-            String imageUrl = swiftStorageService.uploadFile(file);
+            String imageUrl = imgBbService.uploadImage(file);
 
             PuzzleImage puzzle = new PuzzleImage();
             puzzle.setTitle(title);
@@ -62,7 +62,7 @@ public class PuzzleImageService {
             puzzle.setImageDataUrl(imageUrl);
             return puzzleRepo.save(puzzle);
         } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload puzzle to Swift");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload puzzle to ImgBB");
         }
     }
 

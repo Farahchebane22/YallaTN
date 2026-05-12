@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.example.backend.service.ImageDescriptionService;
-import org.example.backend.service.SwiftStorageService;
+import org.example.backend.service.ImgBbService;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -30,13 +30,14 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProductController {
     private final ProductService productService;
     private final ImageDescriptionService imageDescriptionService;
+    private final ImgBbService imgBbService;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    private SwiftStorageService swiftStorageService;
-
-    public ProductController(ProductService productService, ImageDescriptionService imageDescriptionService) {
+    public ProductController(ProductService productService, 
+                           ImageDescriptionService imageDescriptionService,
+                           ImgBbService imgBbService) {
         this.productService = productService;
         this.imageDescriptionService = imageDescriptionService;
+        this.imgBbService = imgBbService;
     }
 
     @PostMapping({"/upload-image", "/upload-image/"})
@@ -45,7 +46,7 @@ public class ProductController {
             return ResponseEntity.badRequest().build();
         }
         try {
-            String imageUrl = swiftStorageService.uploadFile(file);
+            String imageUrl = imgBbService.uploadImage(file);
             return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

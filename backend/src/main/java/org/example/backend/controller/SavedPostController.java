@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/saved-post")
+@RequestMapping("/api/saved-post")
 public class SavedPostController {
 
     private final SavedPostService savedPostService;

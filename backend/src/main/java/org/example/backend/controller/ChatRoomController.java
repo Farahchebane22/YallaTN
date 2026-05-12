@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/chatroom")
+@RequestMapping("/api/chatroom")
 public class ChatRoomController {
 
     @Autowired
