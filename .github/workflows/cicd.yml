@@ -273,7 +273,7 @@ jobs:
 
     environment:
       name: production
-      url: https://ragweed-catfish-judicial.ngrok-free.dev
+      url: https://unpillowed-redolently-tanja.ngrok-free.dev
 
     steps:
       - name: Checkout
@@ -377,4 +377,4 @@ jobs:
           echo "| Backend | ✅ Deployed | \`${{ env.BACKEND_IMAGE }}:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| Frontend | ✅ Deployed | \`${{ env.FRONTEND_IMAGE }}:latest\` |" >> $GITHUB_STEP_SUMMARY
           echo "| AI | ✅ Deployed | \`${{ env.AI_IMAGE }}:latest\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| URL | 🌐 Live | https://ragweed-catfish-judicial.ngrok-free.dev |" >> $GITHUB_STEP_SUMMARY
+          echo "| URL | 🌐 Live | https://unpillowed-redolently-tanja.ngrok-free.dev |" >> $GITHUB_STEP_SUMMARY

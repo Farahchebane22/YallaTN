@@ -23,7 +23,7 @@ public class ActivityReceiptLinkService {
     @Value("${app.backend.base-url:http://localhost:9091}")
     private String backendBaseUrl;
 
-    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String publicBaseUrl;
 
     private final CloudflaredTunnelService cloudflaredTunnelService;

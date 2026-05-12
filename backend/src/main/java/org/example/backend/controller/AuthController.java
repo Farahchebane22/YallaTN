@@ -74,7 +74,7 @@ public class AuthController {
      * Browser hits on POST-only routes (e.g. opening /api/auth/signup in a tab)
      * redirect here.
      */
-    @Value("${app.public.url:https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.public.url:https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String publicAppBaseUrl;
 
     public AuthController(AuthService authService, RecaptchaService recaptchaService,

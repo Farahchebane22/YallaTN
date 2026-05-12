@@ -39,7 +39,7 @@ import java.time.ZoneId;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
 public class EventController {
     private final EventService eventService;
     private final EventReservationRepository reservationRepository;
@@ -54,7 +54,7 @@ public class EventController {
     private final UserNotificationService userNotificationService;
     private final PaymentService paymentService;
 
-    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${stripe.checkout.currency:usd}")

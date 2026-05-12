@@ -12,7 +12,7 @@ app = FastAPI(title="Yallat'N ML API")
 # ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://localhost:4200", "https://ragweed-catfish-judicial.ngrok-free.dev"],
+    allow_origins=["http://localhost:8080", "http://localhost:4200", "https://unpillowed-redolently-tanja.ngrok-free.dev"],
     allow_methods=["*"],
     allow_headers=["*"],
 )

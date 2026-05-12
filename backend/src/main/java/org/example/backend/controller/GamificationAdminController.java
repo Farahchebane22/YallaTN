@@ -25,7 +25,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 @RestController
 @RequestMapping("/api/admin/gamification")
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}", maxAge = 3600)
 public class GamificationAdminController {
 
     private final BadgeRepository badgeRepository;

@@ -21,7 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/store")
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}", maxAge = 3600)
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}", maxAge = 3600)
 public class StoreRestController {
 
     private final PointPackageRepository pointPackageRepository;
@@ -34,7 +34,7 @@ public class StoreRestController {
             GamificationPointsService gamificationPointsService,
             @Value("${stripe.api.key}") String stripeApiKey,
             @Value("${stripe.checkout.currency:usd}") String stripeCurrency,
-            @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}") String frontendUrl) {
+            @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}") String frontendUrl) {
         this.pointPackageRepository = pointPackageRepository;
         this.gamificationPointsService = gamificationPointsService;
         this.stripeCurrency = stripeCurrency;

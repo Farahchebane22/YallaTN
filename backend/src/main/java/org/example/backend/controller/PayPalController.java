@@ -45,10 +45,10 @@ public class PayPalController {
     @Value("${paypal.client.secret:}")
     private String paypalClientSecret;
 
-    @Value("${paypal.return.url:https://ragweed-catfish-judicial.ngrok-free.dev/transport/payment/return}")
+    @Value("${paypal.return.url:https://unpillowed-redolently-tanja.ngrok-free.dev/transport/payment/return}")
     private String paypalReturnUrl;
 
-    @Value("${paypal.cancel.url:https://ragweed-catfish-judicial.ngrok-free.dev/transport/payment/cancel}")
+    @Value("${paypal.cancel.url:https://unpillowed-redolently-tanja.ngrok-free.dev/transport/payment/cancel}")
     private String paypalCancelUrl;
 
     @PostConstruct

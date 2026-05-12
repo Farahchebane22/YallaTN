@@ -80,7 +80,7 @@ public class AuthService {
     private final AuditService auditService;
     private final RecaptchaService recaptchaService;
 
-    @Value("${app.frontend.base-url:https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     /**

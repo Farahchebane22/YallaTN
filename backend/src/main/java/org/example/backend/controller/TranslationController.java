@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/translate")
-@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+@CrossOrigin(origins = "${app.cors.allowed-origins:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
 public class TranslationController {
 
     private final TranslationService translationService;

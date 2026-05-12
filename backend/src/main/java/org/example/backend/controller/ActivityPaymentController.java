@@ -54,7 +54,7 @@ public class ActivityPaymentController {
     private final UserIdentityResolver userIdentityResolver;
     private final UserNotificationService userNotificationService;
 
-    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${stripe.checkout.currency:usd}")

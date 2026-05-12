@@ -17,7 +17,7 @@ import java.util.List;
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    @Value("${app.cors.allowed-origins:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.cors.allowed-origins:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String allowedOrigins;
 
     @Autowired

@@ -41,7 +41,7 @@ public class EmailService {
             @Value("${app.mail.from.address:${spring.mail.username:no-reply@localhost}}") String userFromEmail,
             @Value("${app.shop.mail.from.name:YallaTN}") String shopFromName,
             @Value("${app.shop.mail.from.address:${app.shop.mail.username:no-reply@localhost}}") String shopFromEmail,
-            @Value("${app.frontend.base-url:https://ragweed-catfish-judicial.ngrok-free.dev}") String frontendBaseUrl,
+            @Value("${app.frontend.base-url:https://unpillowed-redolently-tanja.ngrok-free.dev}") String frontendBaseUrl,
             @Value("${app.mail.welcome-image-path:}") String welcomeImagePath,
             QrCodeService qrCodeService) {
         this.userMailSender = userMailSender;
@@ -65,7 +65,7 @@ public class EmailService {
 
     private static String normalizeBaseUrl(String url) {
         if (url == null || url.isBlank()) {
-            return "https://ragweed-catfish-judicial.ngrok-free.dev";
+            return "https://unpillowed-redolently-tanja.ngrok-free.dev";
         }
         String t = url.trim();
         if (t.endsWith("/")) {

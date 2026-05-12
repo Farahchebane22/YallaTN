@@ -51,7 +51,7 @@ public class PaymentService {
             OrderItemRepository orderItemRepository,
             EmailService emailService,
             @Value("${stripe.api.key:disabled}") String stripeApiKey,
-            @Value("${app.frontend.base-url:https://ragweed-catfish-judicial.ngrok-free.dev}") String frontendBaseUrl) {
+            @Value("${app.frontend.base-url:https://unpillowed-redolently-tanja.ngrok-free.dev}") String frontendBaseUrl) {
         this.orderEntityRepository = orderEntityRepository;
         this.orderItemRepository = orderItemRepository;
         this.emailService = emailService;

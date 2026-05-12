@@ -31,7 +31,7 @@ public class TicketPdfService {
     @Value("${app.ticket.support-email:support@yallatn.com}")
     private String supportEmail;
 
-    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     @Value("${app.ticket.support-phone:}")

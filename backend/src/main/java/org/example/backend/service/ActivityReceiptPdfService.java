@@ -30,7 +30,7 @@ public class ActivityReceiptPdfService {
     private final ActivityReceiptLinkService activityReceiptLinkService;
     private final ActivityMediaRepository activityMediaRepository;
 
-    @Value("${app.frontend.base-url:http://localhost:4200,https://ragweed-catfish-judicial.ngrok-free.dev}")
+    @Value("${app.frontend.base-url:http://localhost:4200,https://unpillowed-redolently-tanja.ngrok-free.dev}")
     private String frontendBaseUrl;
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
